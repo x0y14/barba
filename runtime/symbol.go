@@ -4,9 +4,8 @@ import "fmt"
 
 type SymbolTable map[string]Offset
 
-func NewSymbolTable(size int) *SymbolTable {
-	st := make(SymbolTable, size)
-	return &st
+func NewSymbolTable() *SymbolTable {
+	return &SymbolTable{}
 }
 
 func (s *SymbolTable) Get(name string) (Offset, error) {
