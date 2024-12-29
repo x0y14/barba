@@ -263,6 +263,190 @@ func (r *Runtime) do() error {
 		default:
 			return fmt.Errorf("unsupported sub dest: %v", dest)
 		}
+	case Eq:
+		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
+		lhs := r.program[r.pc()+1]
+		rhs := r.program[r.pc()+2]
+		switch lhs.(type) {
+		case Register:
+			switch rhs.(type) {
+			case Register: // reg vs reg
+				if r.reg[lhs.(Register)] == r.reg[rhs.(Register)] {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			case Integer, Character, Bool, Null: // reg vs int
+				if r.reg[lhs.(Register)] == rhs {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			default:
+				return fmt.Errorf("unsupported eq value: %v == %v", lhs, rhs)
+			}
+		case Integer, Character, Bool, Null:
+			switch rhs.(type) {
+			case Register:
+				if lhs == r.reg[rhs.(Register)] {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			case Integer, Character, Bool, Null:
+				if lhs == rhs {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			default:
+				return fmt.Errorf("unsupported eq value: %v == %v", lhs, rhs)
+			}
+		default:
+			return fmt.Errorf("unsupported eq value: %v == %v", lhs, rhs)
+		}
+	case Ne:
+		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
+		lhs := r.program[r.pc()+1]
+		rhs := r.program[r.pc()+2]
+		switch lhs.(type) {
+		case Register:
+			switch rhs.(type) {
+			case Register: // reg vs reg
+				if r.reg[lhs.(Register)] != r.reg[rhs.(Register)] {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			case Integer, Character, Bool, Null: // reg vs int
+				if r.reg[lhs.(Register)] != rhs {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			default:
+				return fmt.Errorf("unsupported ne value: %v == %v", lhs, rhs)
+			}
+		case Integer, Character, Bool, Null:
+			switch rhs.(type) {
+			case Register:
+				if lhs != r.reg[rhs.(Register)] {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			case Integer, Character, Bool, Null:
+				if lhs != rhs {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			default:
+				return fmt.Errorf("unsupported ne value: %v == %v", lhs, rhs)
+			}
+		default:
+			return fmt.Errorf("unsupported ne value: %v == %v", lhs, rhs)
+		}
+	case Lt:
+		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
+		lhs := r.program[r.pc()+1]
+		rhs := r.program[r.pc()+2]
+		switch lhs.(type) {
+		case Register:
+			switch rhs.(type) {
+			case Register: // reg vs reg
+				if r.reg[lhs.(Register)].Value() < r.reg[rhs.(Register)].Value() {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			case Integer, Character, Bool, Null: // reg vs int
+				if r.reg[lhs.(Register)].Value() < rhs.Value() {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			default:
+				return fmt.Errorf("unsupported lt value: %v == %v", lhs, rhs)
+			}
+		case Integer, Character, Bool, Null:
+			switch rhs.(type) {
+			case Register:
+				if lhs.Value() < r.reg[rhs.(Register)].Value() {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			case Integer, Character, Bool, Null:
+				if lhs.Value() < rhs.Value() {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			default:
+				return fmt.Errorf("unsupported lt value: %v == %v", lhs, rhs)
+			}
+		default:
+			return fmt.Errorf("unsupported lt value: %v == %v", lhs, rhs)
+		}
+	case Le:
+		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
+		lhs := r.program[r.pc()+1]
+		rhs := r.program[r.pc()+2]
+		switch lhs.(type) {
+		case Register:
+			switch rhs.(type) {
+			case Register: // reg vs reg
+				if r.reg[lhs.(Register)].Value() <= r.reg[rhs.(Register)].Value() {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			case Integer, Character, Bool, Null: // reg vs int
+				if r.reg[lhs.(Register)].Value() <= rhs.Value() {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			default:
+				return fmt.Errorf("unsupported le value: %v == %v", lhs, rhs)
+			}
+		case Integer, Character, Bool, Null:
+			switch rhs.(type) {
+			case Register:
+				if lhs.Value() <= r.reg[rhs.(Register)].Value() {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			case Integer, Character, Bool, Null:
+				if lhs.Value() <= rhs.Value() {
+					r.reg[ZeroFlag] = True
+				} else {
+					r.reg[ZeroFlag] = False
+				}
+				return nil
+			default:
+				return fmt.Errorf("unsupported le value: %v == %v", lhs, rhs)
+			}
+		default:
+			return fmt.Errorf("unsupported le value: %v == %v", lhs, rhs)
+		}
 	default:
 		return fmt.Errorf("unsupported opcode: %v", code)
 	}

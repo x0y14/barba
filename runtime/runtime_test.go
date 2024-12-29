@@ -210,3 +210,222 @@ func TestRuntime_Run_Pop(t *testing.T) {
 	assert.Equal(t, Integer(2), rt.reg[General1])
 	assert.Equal(t, Integer(1), rt.reg[General2])
 }
+
+func TestRuntime_Run_Eq(t *testing.T) {
+	// reg(int) == int, want true
+	rt := NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Eq, General1, Integer(1),
+		Ret,
+	})
+	err := rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag])
+	// reg(int) == int, want false
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Eq, General1, Integer(3),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, False, rt.reg[ZeroFlag])
+	// reg(true) == int, want false
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, True,
+		Eq, General1, Integer(1),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, False, rt.reg[ZeroFlag])
+	// reg(char) == int, want false
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Character(1), // 数値が同じでも型が違うとFalseになることを確認
+		Eq, General1, Integer(1),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, False, rt.reg[ZeroFlag])
+}
+func TestRuntime_Run_Ne(t *testing.T) {
+	// reg(int) != int, want false
+	rt := NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Ne, General1, Integer(1),
+		Ret,
+	})
+	err := rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, False, rt.reg[ZeroFlag])
+	// reg(int) != int, want true
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Ne, General1, Integer(3),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag])
+	// reg(true) != int, want true
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, True,
+		Ne, General1, Integer(1),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag])
+	// reg(char) != int, want true
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Character(1), // 数値が同じでも型が違うとTrueになることを確認
+		Ne, General1, Integer(1),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag])
+}
+
+func TestRuntime_Run_Lt(t *testing.T) {
+	// 1 < 1, false
+	rt := NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Lt, General1, Integer(1),
+		Ret,
+	})
+	err := rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, False, rt.reg[ZeroFlag])
+	// 1 < 2, true
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Lt, General1, Integer(2),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag])
+	// 2 < 1, false
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(2),
+		Lt, General1, Integer(1),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, False, rt.reg[ZeroFlag])
+	// char(1) < int(2), true
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Character(1),
+		Lt, General1, Integer(2),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag]) // 大きさ比較なので型が違うものも許可してる.
+}
+
+func TestRuntime_Run_Le(t *testing.T) {
+	// 1 <= 1, true
+	rt := NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Le, General1, Integer(1),
+		Ret,
+	})
+	err := rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag])
+	// 1 <= 2, true
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Le, General1, Integer(2),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag])
+	// 2 <= 1, false
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(2),
+		Le, General1, Integer(1),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, False, rt.reg[ZeroFlag])
+	// char(1) <= int(2), true
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Character(1),
+		Le, General1, Integer(2),
+		Ret,
+	})
+	err = rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, True, rt.reg[ZeroFlag]) // 大きさ比較なので型が違うものも許可してる.
+}
