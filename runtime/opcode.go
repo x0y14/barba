@@ -7,7 +7,9 @@ func (o Opcode) Value() int {
 }
 
 const (
-	Exit Opcode = iota
+	Nop Opcode = iota
+
+	Exit
 
 	Mov
 	Push
@@ -33,7 +35,7 @@ const (
 
 func Operand(op Opcode) int {
 	switch op {
-	case Exit, Ret:
+	case Nop, Exit, Ret:
 		return 0
 	case Push, Pop, Call, Jmp, Je, Jne:
 		return 1
