@@ -4,6 +4,11 @@ import "fmt"
 
 type Memory []Object
 
+func NewMemory(size int) *Memory {
+	mem := make(Memory, size)
+	return &mem
+}
+
 func (m *Memory) Set(offset Offset, obj Object) error {
 	if 0 <= offset.Addr() && offset.Addr() < len(*m) {
 		(*m)[offset.Addr()] = obj
