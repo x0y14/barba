@@ -178,23 +178,28 @@ func (r *Runtime) do() error {
 		}
 	case Mov: // MOV DEST SRC
 		// 終わったらMOV本体とオペランド分移動
-		defer func() { r.setPc(1 + Operand(code.(Opcode))) }()
+		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
 		dest := r.program[r.pc()+1]
 		src := r.program[r.pc()+2]
 		switch dest.(type) {
 		case Register:
 			switch src.(type) {
 			case Register: // reg <- reg
+				r.reg[dest.(Register)] = r.reg[src.(Register)]
+				return nil
 			case StackRelativeOffset: // reg <- offset
+				return fmt.Errorf("unsupported mov src: %v", src)
 			case Integer, Character, Bool, Null:
+				r.reg[dest.(Register)] = src
+				return nil
 			default:
 				return fmt.Errorf("unsupported mov src: %v", src)
 			}
 		case StackRelativeOffset:
+			return fmt.Errorf("unsupported mov dest: %v", dest)
 		default:
 			return fmt.Errorf("unsupported mov dest: %v", dest)
 		}
-		return nil
 	default:
 		return fmt.Errorf("unsupported opcode: %v", code)
 	}

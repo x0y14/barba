@@ -105,3 +105,41 @@ func TestRuntime_Run_Call(t *testing.T) {
 	err = rt.Run()
 	assert.Nil(t, err)
 }
+
+func TestRuntime_Run_Mov(t *testing.T) {
+	rt := NewRuntime(10, 10)
+	rt.Load(Program{
+		DefLabel(5),
+		Mov, General1, Integer(5),
+		Ret,
+
+		DefLabel(4),
+		Mov, General1, Integer(4),
+		Call, Label(5),
+		Ret,
+
+		DefLabel(3),
+		Mov, General1, Integer(3),
+		Call, Label(4),
+		Ret,
+
+		DefLabel(2),
+		Mov, General1, Integer(2),
+		Call, Label(3),
+		Ret,
+
+		DefLabel(1),
+		Mov, General1, Integer(1),
+		Call, Label(2),
+		Ret,
+
+		DefLabel(0),
+		Call, Label(1),
+		Ret,
+	})
+	err := rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, Integer(5), rt.reg[General1])
+}
