@@ -173,3 +173,40 @@ func TestRuntime_Run_Sub(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, Integer(2), rt.reg[General1])
 }
+
+func TestRuntime_Run_Push(t *testing.T) {
+	rt := NewRuntime(10, 10)
+	rt.program = Program{
+		DefLabel(-1),
+		Push, Integer(1),
+		Push, Integer(2),
+		Push, Integer(3),
+		Exit,
+	}
+	rt.sym[Label(-1)] = ProgramAbsoluteOffset(0)
+	err := rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, Integer(3), rt.stack[6]) // どう動いてるかよくわからん
+	assert.Equal(t, Integer(3), rt.pop())
+	assert.Equal(t, Integer(2), rt.stack[7])
+	assert.Equal(t, Integer(2), rt.pop())
+	assert.Equal(t, Integer(1), rt.stack[8])
+	assert.Equal(t, Integer(1), rt.pop())
+}
+func TestRuntime_Run_Pop(t *testing.T) {
+	rt := NewRuntime(10, 10)
+	rt.Load(Program{
+		DefLabel(0),
+		Push, Integer(1),
+		Push, Integer(2),
+		Pop, General1, // <- 2
+		Pop, General2, // <- 1
+		Ret,
+	})
+	err := rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, Integer(2), rt.reg[General1])
+	assert.Equal(t, Integer(1), rt.reg[General2])
+}

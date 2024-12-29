@@ -200,6 +200,27 @@ func (r *Runtime) do() error {
 		default:
 			return fmt.Errorf("unsupported mov dest: %v", dest)
 		}
+	case Push:
+		defer func() { r.setPc(r.pc() + 1 + Operand(Push)) }()
+		switch src := r.program[r.pc()+1]; src.(type) {
+		case Register:
+			r.push(r.reg[src.(Register)])
+			return nil
+		case Integer, Character, Bool, Null:
+			r.push(src)
+			return nil
+		default:
+			return fmt.Errorf("unsupported push src: %v", src)
+		}
+	case Pop:
+		defer func() { r.setPc(r.pc() + 1 + Operand(Pop)) }()
+		switch dest := r.program[r.pc()+1]; dest.(type) {
+		case Register:
+			r.reg[dest.(Register)] = r.pop()
+			return nil
+		default:
+			return fmt.Errorf("unsupported pop dest: %v", dest)
+		}
 	case Add:
 		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
 		dest := r.program[r.pc()+1]
