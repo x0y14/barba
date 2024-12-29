@@ -1,13 +1,13 @@
 package runtime
 
-type Operation int
+type Opcode int
 
-func (o Operation) Value() int {
+func (o Opcode) Value() int {
 	return int(o)
 }
 
 const (
-	Exit Operation = iota
+	Exit Opcode = iota
 
 	Mov
 	Push
@@ -31,7 +31,7 @@ const (
 	Syscall
 )
 
-func Operand(op Operation) int {
+func Operand(op Opcode) int {
 	switch op {
 	case Exit, Ret:
 		return 0
