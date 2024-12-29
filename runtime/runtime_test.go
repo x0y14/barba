@@ -49,8 +49,8 @@ func TestRuntime_CollectLabels(t *testing.T) {
 		DefLabel(0), // ここ以降はユーザーが読み込ませたプログラム
 		Ret,
 	}, rt.program)
-	assert.Equal(t, *NewAbsoluteOffset(ProgramCounter, 0), rt.sym[-1]) // root label, DefLabel(-1)の配列での位置
-	assert.Equal(t, *NewAbsoluteOffset(ProgramCounter, 4), rt.sym[0])  // main label, DefLabel(0)の配列での位置
+	assert.Equal(t, ProgramAbsoluteOffset(0), rt.sym[-1]) // root label, DefLabel(-1)の配列での位置
+	assert.Equal(t, ProgramAbsoluteOffset(4), rt.sym[0])  // main label, DefLabel(0)の配列での位置
 }
 
 func TestRuntime_Run_Exit(t *testing.T) {
@@ -59,7 +59,7 @@ func TestRuntime_Run_Exit(t *testing.T) {
 	rt.program = Program{
 		Exit,
 	}
-	rt.sym[Label(-1)] = *NewAbsoluteOffset(ProgramCounter, 0) // RunでcallされるものをCollectLabelsの代わりにセットしてあげる
+	rt.sym[Label(-1)] = ProgramAbsoluteOffset(0) // RunでcallされるものをCollectLabelsの代わりにセットしてあげる
 	err := rt.Run()
 	assert.Nil(t, err)
 	// Mainあり

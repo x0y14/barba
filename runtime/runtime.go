@@ -46,7 +46,7 @@ func (r *Runtime) CollectLabels() error {
 	for pc, code := range r.program {
 		switch code.(type) {
 		case DefLabel:
-			if err := r.sym.Set(Label(code.Value()), *NewAbsoluteOffset(ProgramCounter, pc)); err != nil {
+			if err := r.sym.Set(Label(code.Value()), ProgramAbsoluteOffset(pc)); err != nil {
 				return err
 			}
 		default:
@@ -62,7 +62,7 @@ func (r *Runtime) Run() error {
 	if err != nil {
 		return err
 	}
-	r.setPc(r.calcOffset(entryPoint))
+	r.setPc(entryPoint.Value())
 	//
 	for {
 		if r.mustExit() {
@@ -112,17 +112,12 @@ func (r *Runtime) setSp(sp int) {
 }
 
 // offsetの計算
-func (r *Runtime) calcOffset(offset Offset) int {
-	if offset.isAbsolute {
-		return offset.distance
-	}
+func (r *Runtime) calcOffset(offset StackRelativeOffset) int {
 	switch offset.target {
-	case ProgramCounter:
-		return r.pc() + offset.distance
 	case StackPointer:
-		return r.sp() + offset.distance
+		return r.sp() + offset.relativeDistance
 	case BasePointer:
-		return r.bp() + offset.distance
+		return r.bp() + offset.relativeDistance
 	default:
 		panic(fmt.Sprintf("unsupported offset: %v", offset))
 	}
@@ -166,8 +161,8 @@ func (r *Runtime) do() error {
 			if err != nil {
 				return err
 			}
-			r.push(*NewAbsoluteOffset(ProgramCounter, r.pc()+1+Operand(Call))) // 戻る場所はoffsetとして与える
-			r.setPc(r.calcOffset(dest))
+			r.push(ProgramAbsoluteOffset(r.pc() + 1 + Operand(Call))) // 戻る場所はoffsetとして与える
+			r.setPc(dest.Value())
 			return nil
 		default:
 			return fmt.Errorf("unsupported call dest: %v", fnLabel)
@@ -175,11 +170,8 @@ func (r *Runtime) do() error {
 	case Ret: // RET
 		dest := r.pop()
 		switch dest.(type) {
-		case Offset: // offsetが入っているはず
-			if !dest.(Offset).IsPc() {
-				return fmt.Errorf("unsupported ret target register: %v", dest)
-			}
-			r.setPc(r.calcOffset(dest.(Offset)))
+		case ProgramAbsoluteOffset: // offsetが入っているはず
+			r.setPc(dest.Value())
 			return nil
 		default:
 			return fmt.Errorf("unsupported ret dest: %v", dest)
@@ -193,12 +185,12 @@ func (r *Runtime) do() error {
 		case Register:
 			switch src.(type) {
 			case Register: // reg <- reg
-			case Offset: // reg <- offset
+			case StackRelativeOffset: // reg <- offset
 			case Integer, Character, Bool, Null:
 			default:
 				return fmt.Errorf("unsupported mov src: %v", src)
 			}
-		case Offset:
+		case StackRelativeOffset:
 		default:
 			return fmt.Errorf("unsupported mov dest: %v", dest)
 		}

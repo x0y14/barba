@@ -2,6 +2,12 @@ package runtime
 
 import "fmt"
 
+type MemoryOffset int
+
+func (m MemoryOffset) Value() int {
+	return int(m)
+}
+
 type Memory []Object
 
 func NewMemory(size int) *Memory {
@@ -9,7 +15,7 @@ func NewMemory(size int) *Memory {
 	return &mem
 }
 
-func (m *Memory) Set(offset Offset, obj Object) error {
+func (m *Memory) Set(offset MemoryOffset, obj Object) error {
 	if 0 <= offset.Value() && offset.Value() < len(*m) {
 		(*m)[offset.Value()] = obj
 		return nil
@@ -17,14 +23,14 @@ func (m *Memory) Set(offset Offset, obj Object) error {
 	return fmt.Errorf("offset must be 0< = x < %d", len(*m))
 }
 
-func (m *Memory) Get(offset Offset) Object {
+func (m *Memory) Get(offset MemoryOffset) Object {
 	return (*m)[offset.Value()]
 }
 
-func (m *Memory) Delete(offset Offset) {
+func (m *Memory) Delete(offset MemoryOffset) {
 	(*m)[offset.Value()] = nil
 }
 
-func (m *Memory) IsEmpty(offset Offset) bool {
+func (m *Memory) IsEmpty(offset MemoryOffset) bool {
 	return (*m)[offset.Value()] == nil
 }
