@@ -143,3 +143,33 @@ func TestRuntime_Run_Mov(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, Integer(5), rt.reg[General1])
 }
+
+func TestRuntime_Run_Add(t *testing.T) {
+	rt := NewRuntime(10, 10)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(1),
+		Add, General1, Integer(4),
+		Ret,
+	})
+	err := rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, Integer(5), rt.reg[General1])
+}
+
+func TestRuntime_Run_Sub(t *testing.T) {
+	rt := NewRuntime(10, 10)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(5),
+		Sub, General1, Integer(3),
+		Ret,
+	})
+	err := rt.CollectLabels()
+	assert.Nil(t, err)
+	err = rt.Run()
+	assert.Nil(t, err)
+	assert.Equal(t, Integer(2), rt.reg[General1])
+}

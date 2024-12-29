@@ -200,6 +200,48 @@ func (r *Runtime) do() error {
 		default:
 			return fmt.Errorf("unsupported mov dest: %v", dest)
 		}
+	case Add:
+		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
+		dest := r.program[r.pc()+1]
+		src := r.program[r.pc()+2]
+		switch dest.(type) {
+		case Register:
+			switch src.(type) {
+			case Integer: // reg += int
+				switch r.reg[dest.(Register)].(type) { // destがなんなのか確かめる
+				case Integer:
+					r.reg[dest.(Register)] = Integer(r.reg[dest.(Register)].Value() + src.Value())
+					return nil
+				default:
+					return fmt.Errorf("unsupported add match: %v+=%v", dest, src)
+				}
+			default:
+				return fmt.Errorf("unsupported add src: %v", src)
+			}
+		default:
+			return fmt.Errorf("unsupported add dest: %v", dest)
+		}
+	case Sub:
+		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
+		dest := r.program[r.pc()+1]
+		src := r.program[r.pc()+2]
+		switch dest.(type) {
+		case Register:
+			switch src.(type) {
+			case Integer: // reg -= int
+				switch r.reg[dest.(Register)].(type) { // destがなんなのか確かめる
+				case Integer:
+					r.reg[dest.(Register)] = Integer(r.reg[dest.(Register)].Value() - src.Value())
+					return nil
+				default:
+					return fmt.Errorf("unsupported sub match: %v+=%v", dest, src)
+				}
+			default:
+				return fmt.Errorf("unsupported sub src: %v", src)
+			}
+		default:
+			return fmt.Errorf("unsupported sub dest: %v", dest)
+		}
 	default:
 		return fmt.Errorf("unsupported opcode: %v", code)
 	}
