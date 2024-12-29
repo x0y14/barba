@@ -7,8 +7,7 @@ func (o Operation) Value() int {
 }
 
 const (
-	Illegal Operation = iota
-	Exit
+	Exit Operation = iota
 
 	Mov
 	Push
@@ -31,3 +30,16 @@ const (
 
 	Syscall
 )
+
+func Operand(op Operation) int {
+	switch op {
+	case Exit, Ret:
+		return 0
+	case Push, Pop, Call, Jmp, Je, Jne:
+		return 1
+	case Mov, Add, Sub, Eq, Ne, Lt, Le, Syscall:
+		return 2
+	default:
+		return 0
+	}
+}
