@@ -3,6 +3,8 @@ intel記法っぽいものを使います．
 `MOV DEST SRC` // DEST = SRC  
 `ADD DEST SRC` // DEST += SRC  
 
+## 関数の引数
+呼び出し前にスタックに逆順に入れてください．(要検証)
 
 ## 計算結果
 スタックに入れます．
