@@ -1,11 +1,17 @@
 package runtime
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type MemoryOffset int
 
 func (m MemoryOffset) Value() int {
 	return int(m)
+}
+func (m MemoryOffset) String() string {
+	return strconv.Itoa(m.Value())
 }
 
 type Memory []Object

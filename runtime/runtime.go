@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"fmt"
+	"os"
 )
 
 type Runtime struct {
@@ -492,6 +493,32 @@ func (r *Runtime) do() error {
 			}
 		default:
 			return fmt.Errorf("unsupported le value: %v == %v", lhs, rhs)
+		}
+	case Syscall:
+		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
+		syscallNo := r.program[r.pc()+1]   // Write, ...
+		syscallArg1 := r.program[r.pc()+2] // Stdout, ...
+		syscallArg2 := r.program[r.pc()+3] // "Hello", ...
+		switch syscallNo.(type) {
+		case SystemCall:
+			switch syscallNo.(SystemCall) {
+			case Write:
+				var f *os.File
+				switch syscallArg1.(StandardIO) {
+				case StdIn:
+					panic(fmt.Errorf("unsupported syscall write dest: %v", StdIn))
+				case StdOut:
+					f = os.Stdout
+				case StdErr:
+					f = os.Stderr
+				}
+				_, err := fmt.Fprintf(f, syscallArg2.String())
+				return err
+			default:
+				return fmt.Errorf("unsupported syscall number: %v", syscallNo)
+			}
+		default:
+			return fmt.Errorf("unsupported syscall want type(syscall), but got: %v", syscallNo)
 		}
 	default:
 		return fmt.Errorf("unsupported opcode: %v", code)

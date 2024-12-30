@@ -1,7 +1,10 @@
 package runtime
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -520,4 +523,37 @@ func TestRuntime_Run_Jne(t *testing.T) {
 	assert.Nil(t, rt.CollectLabels())
 	assert.Nil(t, rt.Run())
 	assert.Equal(t, Integer(2), rt.reg[General1])
+}
+
+func TestRuntime_Run_Syscall_Write(t *testing.T) {
+	tmpStdout := os.Stdout // 標準出力を元に戻せるように保存
+	r, w, _ := os.Pipe()
+	os.Stdout = w // 標準出力の書き込み先を変更
+
+	rt := NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Syscall, Write, StdOut, Character('h'),
+		Syscall, Write, StdOut, Character('e'),
+		Syscall, Write, StdOut, Character('l'),
+		Syscall, Write, StdOut, Character('l'),
+		Syscall, Write, StdOut, Character('o'),
+		Syscall, Write, StdOut, Character(','),
+		Syscall, Write, StdOut, Character('w'),
+		Syscall, Write, StdOut, Character('o'),
+		Syscall, Write, StdOut, Character('r'),
+		Syscall, Write, StdOut, Character('l'),
+		Syscall, Write, StdOut, Character('d'),
+		Syscall, Write, StdOut, Character('!'),
+		Ret,
+	})
+	assert.Nil(t, rt.CollectLabels())
+	assert.Nil(t, rt.Run())
+
+	_ = w.Close()
+	var buf bytes.Buffer
+	_, _ = buf.ReadFrom(r)
+	s := strings.TrimRight(buf.String(), "") // バッファーから文字列へ変換
+	os.Stdout = tmpStdout
+	assert.Equal(t, "hello,world!", s)
 }
