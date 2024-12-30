@@ -429,3 +429,95 @@ func TestRuntime_Run_Le(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, True, rt.reg[ZeroFlag]) // 大きさ比較なので型が違うものも許可してる.
 }
+
+func TestRuntime_Run_Jmp(t *testing.T) {
+	rt := NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(0), // g1 = 0
+		Jmp, Label(1),
+		Add, General1, Integer(1), // g1 += 1, スキップされるはず
+		DefLabel(1),
+		Add, General1, Integer(2), // g1 += 2, これだけ実行されるはず
+		Ret,
+	})
+	assert.Nil(t, rt.CollectLabels())
+	assert.Nil(t, rt.Run())
+	assert.Equal(t, Integer(2), rt.reg[General1])
+	// Jmpを抜くと g1==3 になることを確認
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(0), // g1 = 0
+		//Jmp, Label(1),
+		Add, General1, Integer(1), // g1 += 1
+		DefLabel(1),
+		Add, General1, Integer(2), // g1 += 2
+		Ret,
+	})
+	assert.Nil(t, rt.CollectLabels())
+	assert.Nil(t, rt.Run())
+	assert.Equal(t, Integer(3), rt.reg[General1])
+}
+func TestRuntime_Run_Je(t *testing.T) {
+	rt := NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(0), // g1 = 0
+		Eq, Integer(0), Integer(0), // 0 == 0?
+		Je, Label(1), // if zf==1, goto l_1
+		Add, General1, Integer(1), // g1 += 1, skip
+		DefLabel(1),
+		Add, General1, Integer(2), // g1 += 2, do
+		Ret,
+	})
+	assert.Nil(t, rt.CollectLabels())
+	assert.Nil(t, rt.Run())
+	assert.Equal(t, Integer(2), rt.reg[General1])
+
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(0), // g1 = 0
+		Eq, Integer(0), Integer(1), // 0 == 1?
+		Je, Label(1), // if zf==1, goto l_1
+		Add, General1, Integer(1), // g1 += 1, do
+		DefLabel(1),
+		Add, General1, Integer(2), // g1 += 2, do
+		Ret,
+	})
+	assert.Nil(t, rt.CollectLabels())
+	assert.Nil(t, rt.Run())
+	assert.Equal(t, Integer(3), rt.reg[General1])
+}
+func TestRuntime_Run_Jne(t *testing.T) {
+	rt := NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(0), // g1 = 0
+		Eq, Integer(0), Integer(0), // 0 == 0?
+		Jne, Label(1), // if zf==0, goto l_1
+		Add, General1, Integer(1), // g1 += 1, skip
+		DefLabel(1),
+		Add, General1, Integer(2), // g1 += 2, do
+		Ret,
+	})
+	assert.Nil(t, rt.CollectLabels())
+	assert.Nil(t, rt.Run())
+	assert.Equal(t, Integer(3), rt.reg[General1])
+
+	rt = NewRuntime(2, 1)
+	rt.Load(Program{
+		DefLabel(0),
+		Mov, General1, Integer(0), // g1 = 0
+		Eq, Integer(0), Integer(1), // 0 == 1?
+		Jne, Label(1), // if zf==0, goto l_1
+		Add, General1, Integer(1), // g1 += 1, do
+		DefLabel(1),
+		Add, General1, Integer(2), // g1 += 2, do
+		Ret,
+	})
+	assert.Nil(t, rt.CollectLabels())
+	assert.Nil(t, rt.Run())
+	assert.Equal(t, Integer(2), rt.reg[General1])
+}

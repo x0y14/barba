@@ -176,8 +176,54 @@ func (r *Runtime) do() error {
 		default:
 			return fmt.Errorf("unsupported ret dest: %v", dest)
 		}
+	case Jmp: // Jmp Label
+		destLabel := r.program[r.pc()+1]
+		switch destLabel.(type) {
+		case Label:
+			dest, err := r.sym.Get(destLabel.(Label))
+			if err != nil {
+				return err
+			}
+			r.setPc(dest.Value())
+			return nil
+		default:
+			return fmt.Errorf("unsupported jmp dest: want label, but got: %v", destLabel)
+		}
+	case Je:
+		destLabel := r.program[r.pc()+1]
+		switch destLabel.(type) {
+		case Label:
+			dest, err := r.sym.Get(destLabel.(Label))
+			if err != nil {
+				return err
+			}
+			if r.reg[ZeroFlag] == True {
+				r.setPc(dest.Value())
+				return nil
+			}
+			r.setPc(r.pc() + 1 + Operand(code.(Opcode)))
+			return nil
+		default:
+			return fmt.Errorf("unsupported je dest: want label, but got: %v", destLabel)
+		}
+	case Jne:
+		destLabel := r.program[r.pc()+1]
+		switch destLabel.(type) {
+		case Label:
+			dest, err := r.sym.Get(destLabel.(Label))
+			if err != nil {
+				return err
+			}
+			if r.reg[ZeroFlag] == False {
+				r.setPc(dest.Value())
+				return nil
+			}
+			r.setPc(r.pc() + 1 + Operand(code.(Opcode)))
+			return nil
+		default:
+			return fmt.Errorf("unsupported jne dest: want label, but got: %v", destLabel)
+		}
 	case Mov: // MOV DEST SRC
-		// 終わったらMOV本体とオペランド分移動
 		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
 		dest := r.program[r.pc()+1]
 		src := r.program[r.pc()+2]
