@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"os"
+	"reflect"
 )
 
 type Runtime struct {
@@ -124,6 +125,31 @@ func (r *Runtime) calcOffset(offset StackRelativeOffset) int {
 	}
 }
 
+func (r *Runtime) isSameObjType(obj1, obj2 Object, deep bool) bool {
+	if !deep {
+		return reflect.TypeOf(obj1) == reflect.TypeOf(obj2)
+	}
+	var lhs Object
+	var rhs Object
+	switch obj1.(type) {
+	case Register:
+		lhs = r.reg[obj1.(Register)]
+	case StackRelativeOffset:
+		lhs = r.stack[r.calcOffset(obj1.(StackRelativeOffset))]
+	default:
+		lhs = obj1
+	}
+	switch obj2.(type) {
+	case Register:
+		rhs = r.reg[obj2.(Register)]
+	case StackRelativeOffset:
+		rhs = r.stack[r.calcOffset(obj2.(StackRelativeOffset))]
+	default:
+		rhs = obj2
+	}
+	return reflect.TypeOf(lhs) == reflect.TypeOf(rhs)
+}
+
 // 終了フラグ
 func (r *Runtime) mustExit() bool {
 	return r.reg[ExitFlag] == True
@@ -235,7 +261,8 @@ func (r *Runtime) do() error {
 				r.reg[dest.(Register)] = r.reg[src.(Register)]
 				return nil
 			case StackRelativeOffset: // reg <- offset
-				return fmt.Errorf("unsupported mov src: %v", src)
+				r.reg[dest.(Register)] = r.stack[r.calcOffset(src.(StackRelativeOffset))]
+				return nil
 			case Integer, Character, Bool, Null:
 				r.reg[dest.(Register)] = src
 				return nil
@@ -243,6 +270,17 @@ func (r *Runtime) do() error {
 				return fmt.Errorf("unsupported mov src: %v", src)
 			}
 		case StackRelativeOffset:
+			switch src.(type) {
+			case Register:
+				r.stack[r.calcOffset(dest.(StackRelativeOffset))] = r.reg[src.(Register)]
+				return nil
+			case StackRelativeOffset:
+				r.stack[r.calcOffset(dest.(StackRelativeOffset))] = r.stack[r.calcOffset(src.(StackRelativeOffset))]
+				return nil
+			case Integer, Character, Bool, Null:
+				r.stack[r.calcOffset(dest.(StackRelativeOffset))] = src
+				return nil
+			}
 			return fmt.Errorf("unsupported mov dest: %v", dest)
 		default:
 			return fmt.Errorf("unsupported mov dest: %v", dest)
@@ -252,6 +290,9 @@ func (r *Runtime) do() error {
 		switch src := r.program[r.pc()+1]; src.(type) {
 		case Register:
 			r.push(r.reg[src.(Register)])
+			return nil
+		case StackRelativeOffset:
+			r.push(r.stack[r.calcOffset(src.(StackRelativeOffset))])
 			return nil
 		case Integer, Character, Bool, Null:
 			r.push(src)
@@ -272,17 +313,18 @@ func (r *Runtime) do() error {
 		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
 		dest := r.program[r.pc()+1]
 		src := r.program[r.pc()+2]
+		if !r.isSameObjType(dest, src, true) {
+			return fmt.Errorf("unsupported sub match: %v-=%v", dest, src)
+		}
 		switch dest.(type) {
 		case Register:
 			switch src.(type) {
 			case Integer: // reg += int
-				switch r.reg[dest.(Register)].(type) { // destがなんなのか確かめる
-				case Integer:
-					r.reg[dest.(Register)] = Integer(r.reg[dest.(Register)].Value() + src.Value())
-					return nil
-				default:
-					return fmt.Errorf("unsupported add match: %v+=%v", dest, src)
-				}
+				r.reg[dest.(Register)] = Integer(r.reg[dest.(Register)].Value() + src.Value())
+				return nil
+			case Register:
+				r.reg[dest.(Register)] = Integer(r.reg[dest.(Register)].Value() + r.reg[src.(Register)].Value())
+				return nil
 			default:
 				return fmt.Errorf("unsupported add src: %v", src)
 			}
@@ -293,17 +335,18 @@ func (r *Runtime) do() error {
 		defer func() { r.setPc(r.pc() + 1 + Operand(code.(Opcode))) }()
 		dest := r.program[r.pc()+1]
 		src := r.program[r.pc()+2]
+		if !r.isSameObjType(dest, src, true) {
+			return fmt.Errorf("unsupported sub match: %v-=%v", dest, src)
+		}
 		switch dest.(type) {
 		case Register:
 			switch src.(type) {
 			case Integer: // reg -= int
-				switch r.reg[dest.(Register)].(type) { // destがなんなのか確かめる
-				case Integer:
-					r.reg[dest.(Register)] = Integer(r.reg[dest.(Register)].Value() - src.Value())
-					return nil
-				default:
-					return fmt.Errorf("unsupported sub match: %v+=%v", dest, src)
-				}
+				r.reg[dest.(Register)] = Integer(r.reg[dest.(Register)].Value() - src.Value())
+				return nil
+			case Register:
+				r.reg[dest.(Register)] = Integer(r.reg[dest.(Register)].Value() - r.reg[src.(Register)].Value())
+				return nil
 			default:
 				return fmt.Errorf("unsupported sub src: %v", src)
 			}
