@@ -1039,6 +1039,7 @@ func TestRuntime_Run_FizzBuzz(t *testing.T) {
 100 buzz
 `
 	assert.Equal(t, fizzbuzz, s)
+	assert.Equal(t, Integer(0), rt.reg[ACM1])
 }
 
 func TestRuntime_Run_Fibonacci(t *testing.T) {
