@@ -587,9 +587,9 @@ func TestRuntime_Run_FizzBuzz(t *testing.T) {
 		Sub, StackPointer, R1, // SPをずらす
 		// ## 引数と変数の結び付け ##
 		// Arg1
-		Mov, StackRelativeOffset{BasePointer, -1}, StackRelativeOffset{BasePointer, +3},
+		Mov, StackRelativeOffset{BasePointer, -1}, StackRelativeOffset{BasePointer, +2},
 		// Arg2
-		Mov, StackRelativeOffset{BasePointer, -2}, StackRelativeOffset{BasePointer, +2},
+		Mov, StackRelativeOffset{BasePointer, -2}, StackRelativeOffset{BasePointer, +3},
 		//
 		// # n -= xをする #
 		// ## n - x ##
@@ -681,8 +681,8 @@ func TestRuntime_Run_FizzBuzz(t *testing.T) {
 		// < return-beg >
 		// # 戻り値の用意 #
 		// check_x(n,x)
-		Push, StackRelativeOffset{BasePointer, -1}, // nをarg1として
 		Push, StackRelativeOffset{BasePointer, -2}, // xをarg2として
+		Push, StackRelativeOffset{BasePointer, -1}, // nをarg1として
 		// < call-beg >
 		Call, Label(1), // check_x
 		Push, Integer(2), // 引数分spを戻す
@@ -742,8 +742,8 @@ func TestRuntime_Run_FizzBuzz(t *testing.T) {
 		// < if-beg >
 		// ## 左辺の計算をする ##
 		// check(i, 15)
-		Push, StackRelativeOffset{BasePointer, -1}, // arg1として
 		Push, Integer(15), //arg2として
+		Push, StackRelativeOffset{BasePointer, -1}, // arg1として
 		// < call-beg >
 		Call, Label(1), // check_x
 		Push, Integer(2), // 引数分spを戻す
@@ -784,8 +784,8 @@ func TestRuntime_Run_FizzBuzz(t *testing.T) {
 		// < if-beg >
 		// ## 左辺の計算をする ##
 		// ### check_x(i, 5)をする ###
-		Push, StackRelativeOffset{BasePointer, -1}, // iをarg1として
 		Push, Integer(5), // 5をarg2として
+		Push, StackRelativeOffset{BasePointer, -1}, // iをarg1として
 		// < call-beg >
 		Call, Label(1), // check_x
 		Push, Integer(2), // 引数分spを戻してあげる
@@ -821,8 +821,8 @@ func TestRuntime_Run_FizzBuzz(t *testing.T) {
 		// < if-beg >
 		// ## 左辺の計算をする ##
 		// ### check_x(i, 3)をする ###
-		Push, StackRelativeOffset{BasePointer, -1}, // iをarg1として
 		Push, Integer(3), // 3をarg2として
+		Push, StackRelativeOffset{BasePointer, -1}, // iをarg1として
 		// < call-beg >
 		Call, Label(1), // check_x
 		Push, Integer(2), // 引数分spを戻す
