@@ -159,6 +159,9 @@ func (r *Runtime) mustExit() bool {
 // #スタック管理#
 // ############
 func (r *Runtime) push(obj Object) {
+	if obj == nil {
+		panic("nil pushed")
+	}
 	r.setSp(r.sp() - 1)
 	if r.sp() < 0 {
 		panic(fmt.Sprintf("stack overflow: stack_size=%d, access=%d", len(r.stack), r.sp()))
@@ -289,12 +292,15 @@ func (r *Runtime) do() error {
 		defer func() { r.setPc(r.pc() + 1 + Operand(Push)) }()
 		switch src := r.program[r.pc()+1]; src.(type) {
 		case Register:
+			//log.Printf("push reg: %v = %v\n", src.String(), r.reg[src.(Register)].String())
 			r.push(r.reg[src.(Register)])
 			return nil
 		case StackRelativeOffset:
+			//log.Println("push offset")
 			r.push(r.stack[r.calcOffset(src.(StackRelativeOffset))])
 			return nil
 		case Integer, Character, Bool, Null:
+			//log.Println("push primitive")
 			r.push(src)
 			return nil
 		default:
@@ -314,7 +320,7 @@ func (r *Runtime) do() error {
 		dest := r.program[r.pc()+1]
 		src := r.program[r.pc()+2]
 		if !r.isSameObjType(dest, src, true) {
-			return fmt.Errorf("unsupported sub match: %v-=%v", dest, src)
+			return fmt.Errorf("unsupported add match: %v-=%v", dest, src)
 		}
 		switch dest.(type) {
 		case Register:
@@ -361,6 +367,7 @@ func (r *Runtime) do() error {
 		case Register:
 			switch rhs.(type) {
 			case Register: // reg vs reg
+				//log.Printf("eq %v == %v\n", r.reg[lhs.(Register)].String(), r.reg[rhs.(Register)].String())
 				if r.reg[lhs.(Register)] == r.reg[rhs.(Register)] {
 					r.reg[ZeroFlag] = True
 				} else {
@@ -555,8 +562,17 @@ func (r *Runtime) do() error {
 				case StdErr:
 					f = os.Stderr
 				}
-				_, err := fmt.Fprintf(f, syscallArg2.String())
-				return err
+				switch syscallArg2.(type) {
+				case Register:
+					_, err := fmt.Fprintf(f, r.reg[syscallArg2.(Register)].String())
+					return err
+				case StackRelativeOffset:
+					_, err := fmt.Fprintf(f, r.stack[r.calcOffset(syscallArg2.(StackRelativeOffset))].String())
+					return err
+				default:
+					_, err := fmt.Fprintf(f, syscallArg2.String())
+					return err
+				}
 			default:
 				return fmt.Errorf("unsupported syscall number: %v", syscallNo)
 			}

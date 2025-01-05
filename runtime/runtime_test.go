@@ -563,8 +563,371 @@ func TestRuntime_Run_FizzBuzz(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w // 標準出力の書き込み先を変更
 
-	rt := NewRuntime(10, 10)
-	rt.Load(Program{})
+	rt := NewRuntime(1000, 10)
+	rt.Load(Program{
+		//fn check_x(n int, x int) bool {
+		//	n = n - x
+		//	if n == 0 {
+		//		return true
+		//	} else if n < 0 {
+		//		return false
+		//	}
+		//	return check_x(n, x)
+		//}
+
+		// check_x:
+		DefLabel(1),
+		// # 関数の初期設定 #
+		// ## 現状復帰のための保存 ##
+		Push, BasePointer,
+		Mov, BasePointer, StackPointer,
+		// ## 引数を含む変数領域の確保 ##
+		Push, Integer(2), // xとnの2つ
+		Pop, R1, // 一旦レジスタに入れてから引き算する
+		Sub, StackPointer, R1, // SPをずらす
+		// ## 引数と変数の結び付け ##
+		// Arg1
+		Mov, StackRelativeOffset{BasePointer, -1}, StackRelativeOffset{BasePointer, +3},
+		// Arg2
+		Mov, StackRelativeOffset{BasePointer, -2}, StackRelativeOffset{BasePointer, +2},
+		//
+		// # n -= xをする #
+		// ## n - x ##
+		Push, StackRelativeOffset{BasePointer, -1}, // 左辺n
+		Push, StackRelativeOffset{BasePointer, -2}, // 右辺x
+		// < sub-beg >
+		Pop, R2, // 右辺の取り出し
+		Pop, R1, // 左辺の取り出し
+		Sub, R1, R2, // R1 -= R2
+		Push, R1,
+		// < sub-end >
+		// ## nに計算結果を代入する ##
+		// < assign-beg >
+		Pop, R1, // 直前の結果の取り出し
+		Mov, StackRelativeOffset{BasePointer, -1}, R1, // n = ${直前}
+		// < assign-end >
+		//
+		// # if n == 0 {} をする #
+		// < if-beg >
+		// ## n == 0 ##
+		Push, StackRelativeOffset{BasePointer, -1}, // 左辺n
+		Push, Integer(0), // 右辺
+		// < eq-beg >
+		Pop, R2, // 右辺の取り出し
+		Pop, R1, // 左辺の取り出し
+		Eq, R1, R2, // r1 == r2
+		Push, ZeroFlag,
+		// < eq-end >
+		// ## 条件分岐 ##
+		Pop, Temporal1, // 直前の結果いらないので捨てる
+		Je, Label(2), // check_x_if_1_if, (n == 0) == trueだったらifブロックへ
+		Jmp, Label(3), // check_x_if_1_else, (n == 0) == falseだったらelseブロックへ
+		// check_x_if_1_if:
+		DefLabel(2),
+		// # if n == 0 {}のリターン処理 #
+		// < return-beg >
+		// ## 戻り値の設定 ##
+		Mov, ACM1, True,
+		// # 関数の終了処理 #
+		Mov, StackPointer, BasePointer,
+		Pop, BasePointer,
+		Ret,
+		// < return-end >
+		Jmp, Label(4), // check_x_if_1_end, ifの終了へ
+		// check_x_if_1_else:
+		DefLabel(3),
+		// 何もしない
+		Jmp, Label(4), // check_x_if_1_end, ifの終了へ
+		// check_x_if_1_end:
+		DefLabel(4),
+		// < if-end >
+		//
+		// # if n < 0 {} をする #
+		// < if-beg >
+		// ## n < 0 ##
+		Push, StackRelativeOffset{BasePointer, -1}, // 左辺n
+		Push, Integer(0),
+		// < lt-beg >
+		Pop, R2, // 右辺の取り出し
+		Pop, R1, // 左辺の取り出し
+		Lt, R1, R2, // r1 < r2
+		Push, ZeroFlag, // 結果
+		// < lt-end >
+		// ## 条件分岐 ##
+		Pop, Temporal1,
+		Je, Label(5), // check_x_if_2_if, (n < 0) == trueならifブロックへ
+		Jmp, Label(6), // check_x_if_2_else, (n < 0) == falseならelseブロックへ
+		// check_x_if_2_if:
+		DefLabel(5),
+		// # if n < 0 {} のリターン処理 #
+		// < return-beg >
+		// ## 戻り値の設定 ##
+		Mov, ACM1, False,
+		// # 関数の終了処理 #
+		Mov, StackPointer, BasePointer,
+		Pop, BasePointer,
+		Ret,
+		// < return-end >
+		Jmp, Label(7), // check_x_if_2_end, ifの終了へ
+		// check_x_if_2_else:
+		DefLabel(6),
+		// 何もしない
+		Jmp, Label(7), // check_x_if_2_end, ifの終了へ
+		// check_x_if_2_end:
+		DefLabel(7),
+		// < if-end >
+		//
+		// どれのifにも引っ掛かんなかった場合のreturn
+		// < return-beg >
+		// # 戻り値の用意 #
+		// check_x(n,x)
+		Push, StackRelativeOffset{BasePointer, -1}, // nをarg1として
+		Push, StackRelativeOffset{BasePointer, -2}, // xをarg2として
+		// < call-beg >
+		Call, Label(1), // check_x
+		Push, Integer(2), // 引数分spを戻す
+		Pop, R1,
+		Add, StackPointer, R1,
+		Push, ACM1, // 結果を取り出す
+		// < call-end >
+		// # 戻り値の格納
+		Pop, R1,
+		Mov, ACM1, R1,
+		// < return-end >
+		//
+		// # 関数の終了処理 #
+		Mov, StackPointer, BasePointer,
+		Pop, BasePointer,
+		Ret,
+
+		// ---
+
+		// fn main() {
+		//     i := 1
+		//     for {
+		//         if check(i, 15) { println(i, "fizzbuzz") }
+		//         else if check(i, 5) { println(i, "buzz") }
+		//         else if check(i, 3) { println(i, "fizz") }
+		//         else { println(i) }
+		//         i ++
+		//         if i  == 101 { break }
+		//     }
+		//     return
+		// }
+
+		// main:
+		DefLabel(0),
+		// # 関数の初期設定 #
+		// ## 現状復帰のための保存 ##
+		Push, BasePointer,
+		Mov, BasePointer, StackPointer,
+		// ## 引数を含む変数領域の確保 ##
+		Push, Integer(1), // iの1つ
+		Pop, R1, // 一旦レジスタに入れてから引き算する
+		Sub, StackPointer, R1, // SPをずらす
+		// ## 引数と変数の結び付け ##
+		// mainにはなし
+		//
+		// # i := 1をする #
+		// < assign-beg >
+		Push, Integer(1), // 右辺
+		Pop, R1, // 右辺辺の取り出し
+		Mov, StackRelativeOffset{BasePointer, -1}, R1,
+		// < assign-end >
+		//
+		// < for-beg >
+		// main_for_block_1_beg:
+		DefLabel(8),
+		// # if check_x(i, 15) {} をする #
+		// < if-beg >
+		// ## 左辺の計算をする ##
+		// check(i, 15)
+		Push, StackRelativeOffset{BasePointer, -1}, // arg1として
+		Push, Integer(15), //arg2として
+		// < call-beg >
+		Call, Label(1), // check_x
+		Push, Integer(2), // 引数分spを戻す
+		Pop, R1,
+		Add, StackPointer, R1, //
+		Push, ACM1, // 左辺, 結果をスタックに入れてあげる
+		// < call-end >
+		// ## 右辺の計算をする ##
+		Push, True,
+		// ## check_x(i, 15) == true ##
+		// < eq-beg >
+		Pop, R2, // 右辺の取り出し
+		Pop, R1, // 左辺の取り出し
+		Eq, R1, R2, // r1 == r2
+		Push, ZeroFlag,
+		// < eq-end >
+		// ## 条件分岐 ##
+		Pop, Temporal1,
+		Je, Label(9), // main_if_1_if, check_x(i, 15) == trueならifブロックへ
+		Jmp, Label(10), // main_if_1_else, check_x(i, 15) == trueでないならelseブロックへ
+		// main_if_1_if:
+		DefLabel(9),
+		Syscall, Write, StdOut, StackRelativeOffset{BasePointer, -1}, // print i
+		Syscall, Write, StdOut, Character(' '),
+		Syscall, Write, StdOut, Character('f'),
+		Syscall, Write, StdOut, Character('i'),
+		Syscall, Write, StdOut, Character('z'),
+		Syscall, Write, StdOut, Character('z'),
+		Syscall, Write, StdOut, Character('b'),
+		Syscall, Write, StdOut, Character('u'),
+		Syscall, Write, StdOut, Character('z'),
+		Syscall, Write, StdOut, Character('z'),
+		Syscall, Write, StdOut, Character('\n'),
+		Jmp, Label(11), // main_if_1_end, ifの終了へ
+		// main_if_1_else:
+		DefLabel(10),
+		// # if check(i, 5) {} をする #
+		// < if-beg >
+		// ## 左辺の計算をする ##
+		// ### check_x(i, 5)をする ###
+		Push, StackRelativeOffset{BasePointer, -1}, // iをarg1として
+		Push, Integer(5), // 5をarg2として
+		// < call-beg >
+		Call, Label(1), // check_x
+		Push, Integer(2), // 引数分spを戻してあげる
+		Pop, R1,
+		Add, StackPointer, R1,
+		Push, ACM1, // 左辺, 結果をスタックに
+		// < call-end >
+		// ## 右辺の計算をする ##
+		Push, True,
+		// ## check(i, 5) == trueをする ##
+		// < eq-beg >
+		Pop, R2, // 右辺の取り出し
+		Pop, R1, // 左辺の取り出し
+		Eq, R1, R2, // r1 == r2
+		Push, ZeroFlag, // 結果
+		// < eq-end >
+		// ## 条件分岐 ##
+		Je, Label(101), // main_if_2_if, check(i, 5) == trueならifブロックへ
+		Jmp, Label(102), // main_if_2_else, check(i, 5) == trueでないならelseブロックへ
+		// main_if_2_if:
+		DefLabel(101),
+		Syscall, Write, StdOut, StackRelativeOffset{BasePointer, -1}, // print i
+		Syscall, Write, StdOut, Character(' '),
+		Syscall, Write, StdOut, Character('b'),
+		Syscall, Write, StdOut, Character('u'),
+		Syscall, Write, StdOut, Character('z'),
+		Syscall, Write, StdOut, Character('z'),
+		Syscall, Write, StdOut, Character('\n'),
+		Jmp, Label(103), // main_if_2_end, ifの終了へ
+		// main_if_2_else:
+		DefLabel(102),
+		// # if check(i, 3) {} をする #
+		// < if-beg >
+		// ## 左辺の計算をする ##
+		// ### check_x(i, 3)をする ###
+		Push, StackRelativeOffset{BasePointer, -1}, // iをarg1として
+		Push, Integer(3), // 3をarg2として
+		// < call-beg >
+		Call, Label(1), // check_x
+		Push, Integer(2), // 引数分spを戻す
+		Pop, R1,
+		Add, StackPointer, R1,
+		Push, ACM1, // 左辺
+		// < call-end >
+		// ## 右辺の計算をする ##
+		Push, True,
+		// ## check(i, 3) == trueをする ##
+		// < eq-beg >
+		Pop, R2, // 右辺の取り出し
+		Pop, R1, // 左辺の取り出し
+		Eq, R1, R2, // r1 == r2
+		Push, ZeroFlag, // 結果
+		// < eq-end >
+		Pop, Temporal1, // いらないので結果は捨てる
+		Je, Label(201), // main_if_3_if, check(i, 3) == trueならifブロックへ
+		Jmp, Label(202), // main_if_3_else, check(i, 3) == trueでないならelseブロックへ
+		// main_if_3_if:
+		DefLabel(201),
+		Syscall, Write, StdOut, StackRelativeOffset{BasePointer, -1}, // print i
+		Syscall, Write, StdOut, Character(' '),
+		Syscall, Write, StdOut, Character('f'),
+		Syscall, Write, StdOut, Character('i'),
+		Syscall, Write, StdOut, Character('z'),
+		Syscall, Write, StdOut, Character('z'),
+		Syscall, Write, StdOut, Character('\n'),
+		Jmp, Label(203), // main_if_3_end, ifの終了へ
+		// main_if_3_else:
+		DefLabel(202),
+		Syscall, Write, StdOut, StackRelativeOffset{BasePointer, -1}, // print i
+		Syscall, Write, StdOut, Character(' '),
+		Syscall, Write, StdOut, Character('\n'),
+		Jmp, Label(203), // main_if_3_end, ifの終了へ
+		// main_if_3_end:
+		DefLabel(203),
+		// < if-end >
+		//
+		Jmp, Label(103), // main_if_2_end, ifの終了へ
+		// main_if_2_end:
+		DefLabel(103),
+		// < if-end >
+		Jmp, Label(11), // main_if_1_end, ifの終了へ
+		// main_if_1_end:
+		DefLabel(11),
+		// < if-end >
+		//
+		// # i++をする #
+		// < mov-beg >
+		// ## 右辺を計算する ##
+		// ### i + 1 ###
+		Push, StackRelativeOffset{BasePointer, -1}, // 左辺
+		Push, Integer(1), // 右辺
+		// < add-beg >
+		Pop, R2, // 右辺の取り出し
+		Pop, R1, // 左辺の取り出し
+		Add, R1, R2, // r1 += r2
+		Push, R1, // 結果
+		// < add-end >
+		Pop, R1, // 結果を取り出す
+		Mov, StackRelativeOffset{BasePointer, -1}, R1, // i = (i+1)
+		// < mov-end >
+		//
+		// # if i == 101 {} をする #
+		// < if-beg >
+		// ## 左辺の計算をする ##
+		Push, StackRelativeOffset{BasePointer, -1}, // 左辺i
+		// ## 右辺の計算をする ##
+		Push, Integer(101), // 右辺
+		// < eq-beg >
+		Pop, R2, // 右辺の取り出し
+		Pop, R1, // 左辺の取り出し
+		Eq, R1, R2, // r1 == r2
+		Push, ZeroFlag,
+		// < eq-end >
+		// ## 条件分岐 ##
+		Pop, Temporal1, // eqの結果はzero flagそのものを使うのでいらないので捨てる
+		Je, Label(12), // main_if_4_if, (i==101) == trueならifブロックへ
+		Jmp, Label(13), // main_if_4_else, (i==101) == falseならelseブロックへ
+		// main_if_4_if:
+		DefLabel(12),
+		Jmp, Label(15), // main_for_block_1_end, break, forの終了へ
+		Jmp, Label(14), // main_if_4_end, ifの終了へ
+		// main_if_4_else:
+		DefLabel(13),
+		Jmp, Label(14), // main_if_4_end, ifの終了へ
+		// main_if_4_end:
+		DefLabel(14),
+		Jmp, Label(8), // main_for_block_1_beg, forの最初へ
+		// < if-end >
+		//
+		// main_for_block_1_end:
+		DefLabel(15),
+		// < for-end >
+		//
+		// # 戻り値の返却 #
+		Push, Integer(0),
+		Pop, R1,
+		Mov, ACM1, R1,
+		// # 関数の終了処理 #
+		Mov, StackPointer, BasePointer,
+		Pop, BasePointer,
+		Ret,
+	})
 	assert.Nil(t, rt.CollectLabels())
 	assert.Nil(t, rt.Run())
 
@@ -678,7 +1041,7 @@ func TestRuntime_Run_FizzBuzz(t *testing.T) {
 	assert.Equal(t, fizzbuzz, s)
 }
 
-func TestRuntime_Run(t *testing.T) {
+func TestRuntime_Run_Fibonacci(t *testing.T) {
 	rt := NewRuntime(100, 10)
 	rt.Load(Program{
 		// func fib(n int) int {
@@ -857,4 +1220,27 @@ func TestRuntime_Run(t *testing.T) {
 	assert.Nil(t, rt.CollectLabels())
 	assert.Nil(t, rt.Run())
 	assert.Equal(t, Integer(55), rt.reg[R10])
+}
+
+func TestRuntime_Run_var(t *testing.T) {
+	rt := NewRuntime(100, 10)
+	rt.Load(Program{
+		DefLabel(0),
+		Push, BasePointer, // 復元のため
+		Mov, BasePointer, StackPointer,
+		// ## 引数を含む変数領域の確保の用意(おそらく) ##
+		Push, Integer(0), // 関数ないの変数n,x用の領域の確保
+		Pop, R1,
+		Sub, StackPointer, R1, //
+
+		Mov, ACM1, Integer(0),
+
+		// return
+		Mov, StackPointer, BasePointer, // spの復元
+		Pop, BasePointer, // bpの復元
+		Ret,
+	})
+	assert.Nil(t, rt.CollectLabels())
+	assert.Nil(t, rt.Run())
+	assert.Equal(t, Integer(0), rt.reg[ACM1])
 }

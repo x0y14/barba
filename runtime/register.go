@@ -28,6 +28,8 @@ func (r Register) String() string {
 		R10:            "r10",
 		R11:            "r11",
 		R12:            "r12",
+		ACM1:           "acm1",
+		ACM2:           "acm2",
 		_reg_end:       "",
 	}
 	return kinds[r]
@@ -56,6 +58,9 @@ const (
 	R10 // 計算結果が入る
 	R11 // 計算結果が入る
 	R12
+
+	ACM1
+	ACM2
 
 	_reg_end
 )
