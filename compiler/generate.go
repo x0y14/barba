@@ -21,6 +21,105 @@ func nextNode() error {
 	return nil
 }
 
+func genToplevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	case ST_DEFINE_FUNCTION:
+		return genDefineFunction(nd)
+	default:
+		return nil, fmt.Errorf("unsupported toplevel syntax: %v", nd.kind.String())
+	}
+}
+
+func genStatementLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	case ST_RETURN:
+		return genReturn(nd)
+	case ST_BLOCK:
+		return genBlock(nd)
+	default:
+		return genExprLevel(nd)
+	}
+}
+
+func genExprLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genAssignLevel(nd)
+	}
+}
+
+func genAssignLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genAndorLevel(nd)
+	}
+}
+
+func genAndorLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genEqualityLevel(nd)
+	}
+}
+
+func genEqualityLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genRelationalLevel(nd)
+	}
+}
+
+func genRelationalLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genAddLevel(nd)
+	}
+}
+
+func genAddLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genMulLevel(nd)
+	}
+}
+
+func genMulLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genUnaryLevel(nd)
+	}
+}
+
+func genUnaryLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genPrimaryLevel(nd)
+	}
+}
+
+func genPrimaryLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genAccessLevel(nd)
+	}
+}
+
+func genAccessLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genLiteralLevel(nd)
+	}
+}
+
+func genLiteralLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	case ST_PRIMITIVE:
+		return genPrimitive(nd)
+	default:
+		return nil, fmt.Errorf("unsupported literal syntax: %v", nd.kind.String())
+	}
+}
+
 func genPrimitive(nd *Node) (runtime.Program, error) {
 	switch primValue := nd.lhs; primValue.kind {
 	case ST_INTEGER:
@@ -98,16 +197,11 @@ func genBlock(nd *Node) (runtime.Program, error) {
 			c = c.next
 		}
 
-		switch c.kind {
-		case ST_RETURN:
-			stmt, err := genReturn(c)
-			if err != nil {
-				return nil, err
-			}
-			prog = append(prog, stmt...)
-		default:
-			return nil, fmt.Errorf("unsupported statement: %v", c)
+		stmt, err := genStatementLevel(c)
+		if err != nil {
+			return nil, err
 		}
+		prog = append(prog, stmt...)
 	}
 	return prog, nil
 }
@@ -203,7 +297,7 @@ func genDefineFunction(nd *Node) (runtime.Program, error) {
 	if err != nil {
 		return nil, err
 	}
-	block, err := genBlock(nd.rhs)
+	block, err := genStatementLevel(nd.rhs)
 	if err != nil {
 		return nil, err
 	}
@@ -222,17 +316,12 @@ func Generate(nd *Node) (runtime.Program, error) {
 		if err := nextNode(); err != nil { // end of nd
 			break
 		}
-
-		switch curt.kind {
-		case ST_DEFINE_FUNCTION:
-			prog, err := genDefineFunction(curt)
-			if err != nil {
-				return nil, err
-			}
-			program = append(program, prog...)
-		default:
-			return nil, fmt.Errorf("unsupported syntax: %v", curt.kind.String())
+		// check toplevel
+		prog, err := genToplevel(curt)
+		if err != nil {
+			return nil, err
 		}
+		program = append(program, prog...)
 	}
 
 	return program, nil
