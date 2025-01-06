@@ -19,6 +19,10 @@ type StackRelativeOffset struct {
 	relativeDistance int
 }
 
+func NewBPOffset(relativeDistance int) *StackRelativeOffset {
+	return &StackRelativeOffset{BasePointer, relativeDistance}
+}
+
 func (s StackRelativeOffset) Value() int {
 	return s.relativeDistance
 }
