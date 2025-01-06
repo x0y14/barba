@@ -18,6 +18,10 @@ const (
 
 	ST_BLOCK
 	ST_RETURN
+	ST_IF_ELSE
+	ST_IF
+
+	ST_EQ
 )
 
 var stKinds = [...]string{
@@ -33,8 +37,13 @@ var stKinds = [...]string{
 	ST_PRIMITIVE: "PRIMITIVE",
 	ST_INTEGER:   "INTEGER",
 
-	ST_BLOCK:  "BLOCK",
-	ST_RETURN: "RETURN",
+	// Statement Level
+	ST_BLOCK:   "BLOCK",
+	ST_RETURN:  "RETURN",
+	ST_IF_ELSE: "IF_ELSE",
+
+	// EQ LEVEL
+	ST_EQ: "EQ",
 }
 
 func (st Syntax) String() string {

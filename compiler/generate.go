@@ -21,6 +21,208 @@ func nextNode() error {
 	return nil
 }
 
+func genToplevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	case ST_DEFINE_FUNCTION:
+		return genDefineFunction(nd)
+	default:
+		return nil, fmt.Errorf("unsupported toplevel syntax: %v", nd.kind.String())
+	}
+}
+
+func genStatementLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	case ST_RETURN:
+		return genReturn(nd)
+	case ST_IF_ELSE:
+		return genIfElse(nd)
+	case ST_BLOCK:
+		return genBlock(nd)
+	default:
+		return genExprLevel(nd)
+	}
+}
+
+func genIfElse(nd *Node) (runtime.Program, error) {
+	// ラベルの作成
+	curtIfId := RandomString(10)
+	lIf, err := st.RegisterLabel(fmt.Sprintf("%s_if_%s_if", st.curtFn, curtIfId))
+	lElse, err := st.RegisterLabel(fmt.Sprintf("%s_if_%s_else", st.curtFn, curtIfId))
+	lEnd, err := st.RegisterLabel(fmt.Sprintf("%s_if_%s_end", st.curtFn, curtIfId))
+
+	// lhs: if
+	//	lhs: condition
+	//	rhs: block
+	// rhs: else(if)
+	//	lhs: nil
+	//	rhs: block
+	prog := runtime.Program{}
+	ifCond, ifBlock, err := genIf(nd.lhs)
+	if err != nil {
+		return nil, err
+	}
+	elseBlock, err := genBlock(nd.rhs)
+	if err != nil {
+		return nil, err
+	}
+
+	// # if cond {}をする #
+	// ## 条件式 ##
+	prog = append(prog, ifCond...)
+	// zfで判断するので条件式の結果は捨てる
+	prog = append(prog, runtime.Program{
+		runtime.Pop, runtime.Temporal1,
+	}...)
+	// ## 条件分岐 ##
+	prog = append(prog, runtime.Program{
+		runtime.Je, runtime.Label(lIf),
+		runtime.Jmp, runtime.Label(lElse),
+	}...)
+
+	// IF BLOCK
+	prog = append(prog, runtime.Program{
+		runtime.DefLabel(lIf),
+	}...)
+	// 中身
+	prog = append(prog, ifBlock...)
+	// IFの終了へ
+	prog = append(prog, runtime.Program{
+		runtime.Jmp, runtime.Label(lEnd),
+	}...)
+
+	// ELSE BLOCK
+	prog = append(prog, runtime.Program{
+		runtime.DefLabel(lElse),
+	}...)
+	// 中身
+	prog = append(prog, elseBlock...)
+	// IFの終了へ
+	prog = append(prog, runtime.Program{
+		runtime.Jmp, runtime.Label(lEnd),
+	}...)
+
+	// IFの終了
+	prog = append(prog, runtime.Program{
+		runtime.DefLabel(lEnd),
+	}...)
+	return prog, nil
+}
+
+func genIf(nd *Node) (runtime.Program, runtime.Program, error) {
+	// lhs: condition
+	// rhs: block
+	condition, err := genExprLevel(nd.lhs)
+	if err != nil {
+		return nil, nil, err
+	}
+	block, err := genBlock(nd.rhs)
+	if err != nil {
+		return nil, nil, err
+	}
+	return condition, block, nil
+}
+
+func genExprLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genAssignLevel(nd)
+	}
+}
+
+func genAssignLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genAndorLevel(nd)
+	}
+}
+
+func genAndorLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genEqualityLevel(nd)
+	}
+}
+
+func genEqualityLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	case ST_EQ:
+		prog := runtime.Program{}
+		// 左辺の評価
+		lhs, err := genRelationalLevel(nd.lhs)
+		if err != nil {
+			return nil, err
+		}
+		prog = append(prog, lhs...)
+		// 右辺の評価
+		rhs, err := genRelationalLevel(nd.rhs)
+		if err != nil {
+			return nil, err
+		}
+		prog = append(prog, rhs...)
+		// 比較
+		prog = append(prog, runtime.Program{
+			runtime.Pop, runtime.R2, // 右辺の取り出し
+			runtime.Pop, runtime.R1, // 左辺の取り出し
+			runtime.Eq, runtime.R1, runtime.R2, // r1 == r2
+			runtime.Push, runtime.ZeroFlag, // 結果を投げる
+		}...)
+		return prog, nil
+	default:
+		return genRelationalLevel(nd)
+	}
+}
+
+func genRelationalLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genAddLevel(nd)
+	}
+}
+
+func genAddLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genMulLevel(nd)
+	}
+}
+
+func genMulLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genUnaryLevel(nd)
+	}
+}
+
+func genUnaryLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genPrimaryLevel(nd)
+	}
+}
+
+func genPrimaryLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genAccessLevel(nd)
+	}
+}
+
+func genAccessLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	default:
+		return genLiteralLevel(nd)
+	}
+}
+
+func genLiteralLevel(nd *Node) (runtime.Program, error) {
+	switch nd.kind {
+	case ST_PRIMITIVE:
+		return genPrimitive(nd)
+	default:
+		return nil, fmt.Errorf("unsupported literal syntax: %v", nd.kind.String())
+	}
+}
+
 func genPrimitive(nd *Node) (runtime.Program, error) {
 	switch primValue := nd.lhs; primValue.kind {
 	case ST_INTEGER:
@@ -87,8 +289,11 @@ retLoop:
 }
 
 func genBlock(nd *Node) (runtime.Program, error) {
-	c := &Node{next: nd.lhs}
 	prog := runtime.Program{}
+	if nd == nil { // elseとかでnilが渡される場合がある
+		return prog, nil
+	}
+	c := &Node{next: nd.lhs}
 	for {
 		log.Println("block")
 		// go next
@@ -98,16 +303,11 @@ func genBlock(nd *Node) (runtime.Program, error) {
 			c = c.next
 		}
 
-		switch c.kind {
-		case ST_RETURN:
-			stmt, err := genReturn(c)
-			if err != nil {
-				return nil, err
-			}
-			prog = append(prog, stmt...)
-		default:
-			return nil, fmt.Errorf("unsupported statement: %v", c)
+		stmt, err := genStatementLevel(c)
+		if err != nil {
+			return nil, err
 		}
+		prog = append(prog, stmt...)
 	}
 	return prog, nil
 }
@@ -203,7 +403,7 @@ func genDefineFunction(nd *Node) (runtime.Program, error) {
 	if err != nil {
 		return nil, err
 	}
-	block, err := genBlock(nd.rhs)
+	block, err := genStatementLevel(nd.rhs)
 	if err != nil {
 		return nil, err
 	}
@@ -222,17 +422,12 @@ func Generate(nd *Node) (runtime.Program, error) {
 		if err := nextNode(); err != nil { // end of nd
 			break
 		}
-
-		switch curt.kind {
-		case ST_DEFINE_FUNCTION:
-			prog, err := genDefineFunction(curt)
-			if err != nil {
-				return nil, err
-			}
-			program = append(program, prog...)
-		default:
-			return nil, fmt.Errorf("unsupported syntax: %v", curt.kind.String())
+		// check toplevel
+		prog, err := genToplevel(curt)
+		if err != nil {
+			return nil, err
 		}
+		program = append(program, prog...)
 	}
 
 	return program, nil

@@ -5,6 +5,12 @@ import (
 	"maps"
 )
 
+const (
+	GETA_FN    = 0
+	GETA_VAR   = 1000
+	GETA_LABEL = 100000
+)
+
 type SymbolTable struct {
 	fns map[string]int // fnName: labelNo
 
@@ -35,7 +41,7 @@ func (st *SymbolTable) RegisterFn(fnName string) (int, error) {
 	if fnName == "main" {
 		no = 0
 	} else {
-		no = len(st.fns) + 1 // 連番
+		no = GETA_FN + len(st.fns) + 1 // 連番
 	}
 	st.fns[fnName] = no
 	return no, nil
@@ -66,7 +72,7 @@ func (st *SymbolTable) RegisterVar(varName string) (int, error) {
 		st.vars[st.curtFn][st.curtNest] = make(map[string]int)
 	}
 	// 連番してあげる
-	st.vars[st.curtFn][st.curtNest][varName] = len(st.vars[st.curtFn][st.curtNest]) + 1
+	st.vars[st.curtFn][st.curtNest][varName] = GETA_VAR + (len(st.vars[st.curtFn][st.curtNest]) + 1)
 	return st.vars[st.curtFn][st.curtNest][varName], nil
 }
 
@@ -123,7 +129,7 @@ func (st *SymbolTable) RegisterLabel(label string) (int, error) {
 	if !ok {
 		st.labels[st.curtFn] = make(map[string]int)
 	}
-	no := len(st.labels[st.curtFn]) + 1 // 連番
+	no := GETA_LABEL + (len(st.labels[st.curtFn]) + 1) // 連番
 	st.labels[st.curtFn][label] = no
 	return no, nil
 }
