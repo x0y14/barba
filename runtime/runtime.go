@@ -83,6 +83,10 @@ func (r *Runtime) Run() error {
 	}
 }
 
+func (r *Runtime) Status() int {
+	return r.reg[ACM1].Value()
+}
+
 // ############
 // #レジスタ管理#
 // ############
