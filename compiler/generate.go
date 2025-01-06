@@ -64,6 +64,28 @@ func genAndorLevel(nd *Node) (runtime.Program, error) {
 
 func genEqualityLevel(nd *Node) (runtime.Program, error) {
 	switch nd.kind {
+	case ST_EQ:
+		prog := runtime.Program{}
+		// 左辺の評価
+		lhs, err := genRelationalLevel(nd.lhs)
+		if err != nil {
+			return nil, err
+		}
+		prog = append(prog, lhs...)
+		// 右辺の評価
+		rhs, err := genRelationalLevel(nd.rhs)
+		if err != nil {
+			return nil, err
+		}
+		prog = append(prog, rhs...)
+		// 比較
+		prog = append(prog, runtime.Program{
+			runtime.Pop, runtime.R2, // 右辺の取り出し
+			runtime.Pop, runtime.R1, // 左辺の取り出し
+			runtime.Eq, runtime.R1, runtime.R2, // r1 == r2
+			runtime.Push, runtime.ZeroFlag, // 結果を投げる
+		}...)
+		return prog, nil
 	default:
 		return genRelationalLevel(nd)
 	}
