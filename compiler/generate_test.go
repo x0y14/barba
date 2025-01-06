@@ -19,7 +19,7 @@ func TestGenerate_Return100(t *testing.T) {
 				},
 				rhs: &Node{ // `()`
 					kind: ST_FUNCTION_ARGUMENTS,
-					// lhs: nil, // mainは引数なし
+					lhs:  nil, // mainは引数なし
 				},
 			},
 			rhs: &Node{ // `int`
