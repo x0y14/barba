@@ -79,8 +79,8 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		code         *Node
-		expectIR     runtime.Program
+		ir           *Node
+		expectAsm    runtime.Program
 		expectStatus int
 	}{
 		{
@@ -437,9 +437,9 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			prog, err := Generate(tt.code)
+			prog, err := Generate(tt.ir)
 			assert.Nil(t, err)
-			assert.Equal(t, tt.expectIR, prog)
+			assert.Equal(t, tt.expectAsm, prog)
 			rt := runtime.NewRuntime(10, 10)
 			rt.Load(prog)
 			assert.Nil(t, rt.CollectLabels())
