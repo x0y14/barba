@@ -11,3 +11,4 @@ jobs:
           cache: true
       - run: |
           go test ./runtime
+          go test ./compiler
