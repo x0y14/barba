@@ -21,14 +21,14 @@ func nextNode() error {
 	return nil
 }
 
-func genPrimitive(nd *Node) (runtime.Object, error) {
+func genPrimitive(nd *Node) (runtime.Program, error) {
 	switch primValue := nd.lhs; primValue.kind {
 	case ST_INTEGER:
 		i, err := primValue.leaf.GetInt()
 		if err != nil {
 			return nil, err
 		}
-		return runtime.Integer(i), nil
+		return runtime.Program{runtime.Push, runtime.Integer(i)}, nil
 	default:
 		return nil, fmt.Errorf("genPrimitive: unsupported value: %s", primValue.String())
 	}
@@ -48,22 +48,23 @@ retLoop:
 		case c == nil:
 			break retLoop
 		case c.kind == ST_PRIMITIVE:
-			v, err := genPrimitive(c)
+			primProg, err := genPrimitive(c)
 			if err != nil {
 				return nil, err
 			}
+			// # 戻り値の返却 #
+			// スタックに値が入っている
+			prog = append(prog, primProg...)
 			switch count {
 			case 0: // 1つめの戻り値, ACM1に.
 				prog = append(prog, runtime.Program{
-					// # 戻り値の返却 #
-					runtime.Push, v,
+					// スタックから取り出してアキュムレータ1に
 					runtime.Pop, runtime.R1,
 					runtime.Mov, runtime.ACM1, runtime.R1,
 				}...)
 			case 1: // 2つめの戻り値, ACM2に.
 				prog = append(prog, runtime.Program{
-					// # 戻り値の返却 #
-					runtime.Push, v,
+					// スタックから取り出してアキュムレータ2に
 					runtime.Pop, runtime.R1,
 					runtime.Mov, runtime.ACM2, runtime.R1,
 				}...)
