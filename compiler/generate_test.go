@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"barba/compiler/tokenizer"
 	"barba/runtime"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -15,7 +16,7 @@ func TestGenerate_Return100(t *testing.T) {
 				kind: ST_FUNCTION_HEADER,
 				lhs: &Node{ // `main`
 					kind: ST_IDENT,
-					leaf: NewToken(TK_IDENT, "main"),
+					leaf: tokenizer.NewToken(tokenizer.TK_IDENT, "main"),
 				},
 				rhs: &Node{ // `()`
 					kind: ST_FUNCTION_ARGUMENTS,
@@ -35,7 +36,7 @@ func TestGenerate_Return100(t *testing.T) {
 					kind: ST_PRIMITIVE,
 					lhs: &Node{
 						kind: ST_INTEGER,
-						leaf: NewToken(TK_INT, "100"),
+						leaf: tokenizer.NewToken(tokenizer.TK_INT, "100"),
 					},
 				},
 			},
@@ -101,7 +102,7 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 						kind: ST_FUNCTION_HEADER,
 						lhs: &Node{ // `main`
 							kind: ST_IDENT,
-							leaf: NewToken(TK_IDENT, "main"),
+							leaf: tokenizer.NewToken(tokenizer.TK_IDENT, "main"),
 						},
 						rhs: &Node{ // `()`
 							kind: ST_FUNCTION_ARGUMENTS,
@@ -125,14 +126,14 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 									kind: ST_PRIMITIVE,
 									lhs: &Node{
 										kind: ST_INTEGER,
-										leaf: NewToken(TK_INT, "1"),
+										leaf: tokenizer.NewToken(tokenizer.TK_INT, "1"),
 									},
 								},
 								rhs: &Node{ // `1` (右辺)
 									kind: ST_PRIMITIVE,
 									lhs: &Node{
 										kind: ST_INTEGER,
-										leaf: NewToken(TK_INT, "1"),
+										leaf: tokenizer.NewToken(tokenizer.TK_INT, "1"),
 									},
 								},
 							},
@@ -144,7 +145,7 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 										kind: ST_PRIMITIVE,
 										lhs: &Node{
 											kind: ST_INTEGER,
-											leaf: NewToken(TK_INT, "1"),
+											leaf: tokenizer.NewToken(tokenizer.TK_INT, "1"),
 										},
 									},
 								},
@@ -158,7 +159,7 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 									kind: ST_PRIMITIVE,
 									lhs: &Node{
 										kind: ST_INTEGER,
-										leaf: NewToken(TK_INT, "2"),
+										leaf: tokenizer.NewToken(tokenizer.TK_INT, "2"),
 									},
 								},
 							},
@@ -170,7 +171,7 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 								kind: ST_PRIMITIVE,
 								lhs: &Node{
 									kind: ST_INTEGER,
-									leaf: NewToken(TK_INT, "3"),
+									leaf: tokenizer.NewToken(tokenizer.TK_INT, "3"),
 								},
 							},
 						},
@@ -276,7 +277,7 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 						kind: ST_FUNCTION_HEADER,
 						lhs: &Node{ // `main`
 							kind: ST_IDENT,
-							leaf: NewToken(TK_IDENT, "main"),
+							leaf: tokenizer.NewToken(tokenizer.TK_IDENT, "main"),
 						},
 						rhs: &Node{ // `()`
 							kind: ST_FUNCTION_ARGUMENTS,
@@ -300,14 +301,14 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 									kind: ST_PRIMITIVE,
 									lhs: &Node{
 										kind: ST_INTEGER,
-										leaf: NewToken(TK_INT, "1"),
+										leaf: tokenizer.NewToken(tokenizer.TK_INT, "1"),
 									},
 								},
 								rhs: &Node{ // `2` (右辺)
 									kind: ST_PRIMITIVE,
 									lhs: &Node{
 										kind: ST_INTEGER,
-										leaf: NewToken(TK_INT, "2"),
+										leaf: tokenizer.NewToken(tokenizer.TK_INT, "2"),
 									},
 								},
 							},
@@ -319,7 +320,7 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 										kind: ST_PRIMITIVE,
 										lhs: &Node{
 											kind: ST_INTEGER,
-											leaf: NewToken(TK_INT, "1"),
+											leaf: tokenizer.NewToken(tokenizer.TK_INT, "1"),
 										},
 									},
 								},
@@ -333,7 +334,7 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 									kind: ST_PRIMITIVE,
 									lhs: &Node{
 										kind: ST_INTEGER,
-										leaf: NewToken(TK_INT, "2"),
+										leaf: tokenizer.NewToken(tokenizer.TK_INT, "2"),
 									},
 								},
 							},
@@ -345,7 +346,7 @@ func TestGenerate_IF_ELSE(t *testing.T) {
 								kind: ST_PRIMITIVE,
 								lhs: &Node{
 									kind: ST_INTEGER,
-									leaf: NewToken(TK_INT, "3"),
+									leaf: tokenizer.NewToken(tokenizer.TK_INT, "3"),
 								},
 							},
 						},

@@ -1,5 +1,7 @@
 package compiler
 
+import "barba/compiler/tokenizer"
+
 type Syntax int
 
 const (
@@ -52,7 +54,7 @@ func (st Syntax) String() string {
 
 type Node struct {
 	kind Syntax
-	leaf *Token
+	leaf *tokenizer.Token
 	lhs  *Node // 1個しか要素がないならLHSを使う
 	rhs  *Node
 	next *Node
