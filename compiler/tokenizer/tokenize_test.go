@@ -10,8 +10,15 @@ func NewTokenChain(tokens []*Token) *Token {
 	curt := head
 	for _, tok := range tokens {
 		curt.next = tok
+		curt = curt.next
 	}
 	return head.next
+}
+
+func TestNewTokenChain(t *testing.T) {
+	tok := NewToken(TK_IDENT, "id")
+	tok.next = NewToken(TK_EOF, "")
+	assert.Equal(t, tok, NewTokenChain([]*Token{NewToken(TK_IDENT, "id"), NewEofToken()}))
 }
 
 func TestTokenize(t *testing.T) {

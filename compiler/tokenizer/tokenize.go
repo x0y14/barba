@@ -104,6 +104,7 @@ loop:
 		}
 	}
 	curtToken.next = NewToken(TK_WHITESPACE, string(ws))
+	curtToken = curtToken.next
 	return nil
 }
 
@@ -131,6 +132,7 @@ loop:
 		}
 	}
 	curtToken.next = NewToken(TK_STRING, string(str))
+	curtToken = curtToken.next
 	return nil
 }
 
@@ -153,12 +155,14 @@ loop:
 
 	if dotCount == 0 {
 		curtToken.next = NewToken(TK_INT, string(num))
+		curtToken = curtToken.next
 		return nil
 	} else if dotCount == 1 {
 		if num[0] == '.' || num[len(num)-1] == '.' { // .012とか123.とかはエラー
 			return fmt.Errorf("number has invalid-position dot")
 		}
 		curtToken.next = NewToken(TK_FLOAT, string(num))
+		curtToken = curtToken.next
 		return nil
 	} else {
 		return fmt.Errorf("number has too many dot")
@@ -213,6 +217,7 @@ func consumeSymbol() error {
 		}
 	}
 	curtToken.next = NewToken(first, "")
+	curtToken = curtToken.next
 	return nil
 }
 
@@ -232,6 +237,7 @@ loop:
 	}
 
 	curtToken.next = NewToken(TK_IDENT, string(id))
+	curtToken = curtToken.next
 	return nil
 }
 
@@ -267,5 +273,6 @@ func Tokenize(sourceCode string) (*Token, error) {
 		}
 	}
 	curtToken.next = NewToken(TK_EOF, "")
+	curtToken = curtToken.next
 	return headToken.next, nil
 }
