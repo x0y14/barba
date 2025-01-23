@@ -131,6 +131,14 @@ func (t *Token) GetIdent() (string, error) {
 	return t.text, nil
 }
 
+func (t *Token) GetKind() TokenKind {
+	return t.kind
+}
+
+func (t *Token) GetText() string {
+	return t.text
+}
+
 func (t *Token) SetNext(token *Token) {
 	t.next = token
 }
