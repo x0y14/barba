@@ -1,4 +1,4 @@
-package compiler
+package tokenizer
 
 import (
 	"fmt"
@@ -25,12 +25,18 @@ const (
 	TK_LCB // {
 	TK_RCB // }
 
-	TK_EQ // ==
-	TK_NE // !=
-	TK_LT // <
-	TK_LE // <=
-	TK_GT // >
-	TK_GE // >=
+	TK_SEMI  // ;
+	TK_COLON // :
+	TK_COMMA // ,
+	TK_DOT   // .
+
+	TK_EQ  // ==
+	TK_NE  // !=
+	TK_LT  // <
+	TK_LE  // <=
+	TK_GT  // >
+	TK_GE  // >=
+	TK_NOT // !
 
 	TK_ASSIGN // =
 	TK_ADD    // +
@@ -57,12 +63,18 @@ var tokKinds = [...]string{
 	TK_LCB: "{",
 	TK_RCB: "}",
 
-	TK_EQ: "==",
-	TK_NE: "!=",
-	TK_LT: "<",
-	TK_LE: "<=",
-	TK_GT: ">",
-	TK_GE: ">=",
+	TK_SEMI:  ";",
+	TK_COLON: ":",
+	TK_COMMA: ",",
+	TK_DOT:   ".",
+
+	TK_EQ:  "==",
+	TK_NE:  "!=",
+	TK_LT:  "<",
+	TK_LE:  "<=",
+	TK_GT:  ">",
+	TK_GE:  ">=",
+	TK_NOT: "!",
 
 	TK_ASSIGN: "=",
 	TK_ADD:    "+",
@@ -79,12 +91,14 @@ func NewToken(kind TokenKind, text string) *Token {
 	return &Token{
 		kind: kind,
 		text: text,
+		next: nil,
 	}
 }
 
 type Token struct {
 	kind TokenKind
 	text string
+	next *Token
 }
 
 func (t *Token) GetInt() (int, error) {
