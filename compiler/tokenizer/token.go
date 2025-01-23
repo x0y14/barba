@@ -9,6 +9,7 @@ type TokenKind int
 
 const (
 	TK_INVALID TokenKind = iota
+	TK_EOF
 
 	TK_NULL   // null
 	TK_INT    // 12
@@ -47,6 +48,7 @@ const (
 
 var tokKinds = [...]string{
 	TK_INVALID: "INVALID",
+	TK_EOF:     "EOF",
 
 	TK_NULL:   "NULL",
 	TK_INT:    "INT",
@@ -127,4 +129,16 @@ func (t *Token) GetIdent() (string, error) {
 		return "", fmt.Errorf("this token is not ident: %v", t.kind.String())
 	}
 	return t.text, nil
+}
+
+func (t *Token) SetNext(token *Token) {
+	t.next = token
+}
+
+func (t *Token) GetNext() *Token {
+	return t.next
+}
+
+func NewEofToken() *Token {
+	return NewToken(TK_EOF, "")
 }

@@ -23,57 +23,57 @@ func TestTokenize(t *testing.T) {
 		{
 			"only ident with under-bar",
 			"this_is_ident",
-			NewToken(TK_IDENT, "this_is_ident"),
+			NewTokenChain([]*Token{NewToken(TK_IDENT, "this_is_ident"), NewEofToken()}),
 		},
 		{
 			"escaped string",
 			`"hello world\""`,
-			NewToken(TK_STRING, "hello world\""),
+			NewTokenChain([]*Token{NewToken(TK_STRING, "hello world\""), NewEofToken()}),
 		},
 		{
 			"int",
 			"123",
-			NewToken(TK_INT, "123"),
+			NewTokenChain([]*Token{NewToken(TK_INT, "123"), NewEofToken()}),
 		},
 		{
 			"float",
 			"123.45",
-			NewToken(TK_FLOAT, "123.45"),
+			NewTokenChain([]*Token{NewToken(TK_FLOAT, "123.45"), NewEofToken()}),
 		},
 		{
 			"-int",
 			"-123",
-			NewTokenChain([]*Token{NewToken(TK_SUB, ""), NewToken(TK_INT, "123")}),
+			NewTokenChain([]*Token{NewToken(TK_SUB, ""), NewToken(TK_INT, "123"), NewEofToken()}),
 		},
 		{
 			"-float",
 			"-123.45",
-			NewTokenChain([]*Token{NewToken(TK_SUB, ""), NewToken(TK_FLOAT, "123.45")}),
+			NewTokenChain([]*Token{NewToken(TK_SUB, ""), NewToken(TK_FLOAT, "123.45"), NewEofToken()}),
 		},
 		{
 			"whitespace",
 			" \n\t\r",
-			NewToken(TK_WHITESPACE, " \n\t\r"),
+			NewTokenChain([]*Token{NewToken(TK_WHITESPACE, " \n\t\r"), NewEofToken()}),
 		},
 		{
 			"escape",
 			`"hel\"lo"`,
-			NewToken(TK_STRING, `hel"lo`),
+			NewTokenChain([]*Token{NewToken(TK_STRING, `hel"lo`), NewEofToken()}),
 		},
 		{
 			"=+",
 			"=+",
-			NewTokenChain([]*Token{NewToken(TK_ASSIGN, ""), NewToken(TK_ADD, "")}),
+			NewTokenChain([]*Token{NewToken(TK_ASSIGN, ""), NewToken(TK_ADD, ""), NewEofToken()}),
 		},
 		{
 			"==",
 			"==",
-			NewToken(TK_EQ, ""),
+			NewTokenChain([]*Token{NewToken(TK_EQ, ""), NewEofToken()}),
 		},
 		{
 			"+",
 			"+",
-			NewToken(TK_ADD, ""),
+			NewTokenChain([]*Token{NewToken(TK_ADD, ""), NewEofToken()}),
 		},
 		{
 			"hello world",
@@ -83,6 +83,7 @@ func TestTokenize(t *testing.T) {
 				NewToken(TK_LRB, ""),
 				NewToken(TK_STRING, "hello world!"),
 				NewToken(TK_RRB, ""),
+				NewEofToken(),
 			}),
 		},
 	}

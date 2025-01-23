@@ -266,6 +266,6 @@ func Tokenize(sourceCode string) (*Token, error) {
 			}
 		}
 	}
-
+	curtToken.next = NewToken(TK_EOF, "")
 	return headToken.next, nil
 }
