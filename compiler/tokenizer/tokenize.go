@@ -103,8 +103,8 @@ loop:
 			break loop
 		}
 	}
-	curtToken.next = NewToken(TK_WHITESPACE, string(ws))
-	curtToken = curtToken.next
+	//curtToken.next = NewToken(TK_WHITESPACE, string(ws))
+	//curtToken = curtToken.next
 	return nil
 }
 
