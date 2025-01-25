@@ -147,6 +147,10 @@ func (t *Token) GetNext() *Token {
 	return t.next
 }
 
+func (t *Token) ShallowClone() *Token { // nextを切り捨てる
+	return NewToken(t.kind, t.text)
+}
+
 func NewEofToken() *Token {
 	return NewToken(TK_EOF, "")
 }
