@@ -118,6 +118,10 @@ type Node struct {
 	next *Node
 }
 
+func (n *Node) GetKind() Syntax {
+	return n.kind
+}
+
 func (n *Node) String() string {
 	return ""
 }
