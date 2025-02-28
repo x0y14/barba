@@ -17,10 +17,10 @@ type Constant struct {
 	Next *Constant
 }
 
-func NewConstant(primary Underlying, sub *Constant) *Constant {
+func NewConstant(primary Underlying, next *Constant) *Constant {
 	return &Constant{
 		Underlying: primary,
-		Next:       sub,
+		Next:       next,
 	}
 }
 
