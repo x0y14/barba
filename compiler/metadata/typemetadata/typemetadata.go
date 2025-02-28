@@ -45,13 +45,15 @@ func NewBool() *Constant {
 }
 
 // NewArray []stringはArray->Stringで表現します．
-func NewArray(sub *Constant) *Constant {
-	return NewConstant(Array, sub)
+func NewArray(typ *Constant) *Constant {
+	return NewConstant(Array, typ)
 }
 
 // NewMap map[string]intはMap->string->Intで表現します．
-func NewMap(sub *Constant) *Constant {
-	return NewConstant(Map, sub)
+func NewMap(ktyp *Constant, vtyp *Constant) *Constant {
+	c := NewConstant(Map, ktyp)
+	c.Next.Next = vtyp
+	return c
 }
 
 // NewConstantFromStr "string"からString, "[]string"からArray->Stringのように文字列から与えられた型データを
