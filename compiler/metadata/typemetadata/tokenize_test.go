@@ -30,9 +30,9 @@ func TestTokenize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tokens, err := Tokenize([]rune(tt.input))
+			toks, err := Tokenize([]rune(tt.input))
 			assert.Nil(t, err)
-			assert.Equal(t, tt.expect, tokens)
+			assert.Equal(t, tt.expect, toks)
 		})
 	}
 }
