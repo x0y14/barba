@@ -6,6 +6,7 @@ type Syntax int
 
 const (
 	ST_ILLEGAL Syntax = iota
+	ST_EOF
 
 	ST_DEFINE_FUNCTION
 	ST_FUNCTION_DECLARATION
@@ -30,6 +31,7 @@ const (
 
 var stKinds = [...]string{
 	ST_ILLEGAL: "ILLEGAL",
+	ST_EOF:     "EOF",
 
 	ST_DEFINE_FUNCTION:         "DEFINE_FUNCTION",
 	ST_FUNCTION_DECLARATION:    "FUNCTION_DECLARATION",
@@ -108,6 +110,10 @@ func NewDefineFunctionNode(decl, block *Node) *Node {
 
 func NewDummyNode() *Node {
 	return NewNode(ST_ILLEGAL, nil, nil, nil, nil)
+}
+
+func NewEofNode() *Node {
+	return NewNode(ST_EOF, nil, nil, nil, nil)
 }
 
 type Node struct {
