@@ -51,8 +51,10 @@ func consumeLiteralLv() error {
 	case startWith(tokenizer.TK_INT):
 		nodes.SetNext(compiler.NewLeafNode(compiler.ST_INTEGER, consume(tokenizer.TK_INT).ShallowClone()))
 		nodes = nodes.GetNext()
+		return nil
+	default:
+		return fmt.Errorf("unsupported literal")
 	}
-	return nil
 }
 
 func consumeAccessLv() error {
@@ -390,7 +392,8 @@ func Parse(token *tokenizer.Token) (*compiler.Node, error) {
 	head.SetNext(token)
 	curt = head
 
-	nodes = compiler.NewDummyNode()
+	headNode := compiler.NewDummyNode()
+	nodes = headNode
 
 	for !eof() {
 		if err := consumeTopLv(); err != nil {
@@ -398,5 +401,8 @@ func Parse(token *tokenizer.Token) (*compiler.Node, error) {
 		}
 	}
 
-	return nodes, nil
+	nodes.SetNext(compiler.NewEofNode())
+	nodes = nodes.GetNext()
+
+	return headNode.GetNext(), nil
 }
