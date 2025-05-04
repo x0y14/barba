@@ -40,24 +40,27 @@ func main() int {
 	return 100
 }
 `,
-			compiler.NewDefineFunctionNode(
-				compiler.NewFunctionDeclarationNode(
-					compiler.NewFunctionHeaderNode(
-						compiler.NewLeafNode(compiler.ST_IDENT, tokenizer.NewToken(tokenizer.TK_IDENT, "main")),
-						compiler.NewFunctionArgumentsNode(nil),
-					),
-					compiler.NewFunctionReturnDetailsNode(
-						compiler.NewFunctionReturnDetailNode(
-							compiler.NewLeafNode(compiler.ST_IDENT, tokenizer.NewToken(tokenizer.TK_IDENT, "int")),
+			NewNodeChain([]*compiler.Node{
+				compiler.NewDefineFunctionNode(
+					compiler.NewFunctionDeclarationNode(
+						compiler.NewFunctionHeaderNode(
+							compiler.NewLeafNode(compiler.ST_IDENT, tokenizer.NewToken(tokenizer.TK_IDENT, "main")),
+							compiler.NewFunctionArgumentsNode(nil),
+						),
+						compiler.NewFunctionReturnDetailsNode(
+							compiler.NewFunctionReturnDetailNode(
+								compiler.NewLeafNode(compiler.ST_IDENT, tokenizer.NewToken(tokenizer.TK_IDENT, "int")),
+							),
 						),
 					),
+					compiler.NewBlockNode(
+						compiler.NewLRNode(compiler.ST_RETURN,
+							compiler.NewLeafNode(compiler.ST_INTEGER, tokenizer.NewToken(tokenizer.TK_INT, "100")),
+							nil),
+					),
 				),
-				compiler.NewBlockNode(
-					compiler.NewLRNode(compiler.ST_RETURN,
-						compiler.NewLeafNode(compiler.ST_INTEGER, tokenizer.NewToken(tokenizer.TK_INT, "100")),
-						nil),
-				),
-			),
+				compiler.NewEofNode(),
+			}),
 		},
 		{
 			"return 200",
@@ -67,29 +70,32 @@ func main() int {
 	return 200
 }
 `,
-			compiler.NewDefineFunctionNode(
-				compiler.NewFunctionDeclarationNode(
-					compiler.NewFunctionHeaderNode(
-						compiler.NewLeafNode(compiler.ST_IDENT, tokenizer.NewToken(tokenizer.TK_IDENT, "main")),
-						compiler.NewFunctionArgumentsNode(nil),
-					),
-					compiler.NewFunctionReturnDetailsNode(
-						compiler.NewFunctionReturnDetailNode(
-							compiler.NewLeafNode(compiler.ST_IDENT, tokenizer.NewToken(tokenizer.TK_IDENT, "int")),
+			NewNodeChain([]*compiler.Node{
+				compiler.NewDefineFunctionNode(
+					compiler.NewFunctionDeclarationNode(
+						compiler.NewFunctionHeaderNode(
+							compiler.NewLeafNode(compiler.ST_IDENT, tokenizer.NewToken(tokenizer.TK_IDENT, "main")),
+							compiler.NewFunctionArgumentsNode(nil),
+						),
+						compiler.NewFunctionReturnDetailsNode(
+							compiler.NewFunctionReturnDetailNode(
+								compiler.NewLeafNode(compiler.ST_IDENT, tokenizer.NewToken(tokenizer.TK_IDENT, "int")),
+							),
 						),
 					),
+					compiler.NewBlockNode(
+						NewNodeChain([]*compiler.Node{
+							compiler.NewLRNode(compiler.ST_RETURN,
+								nil,
+								nil),
+							compiler.NewLRNode(compiler.ST_RETURN,
+								compiler.NewLeafNode(compiler.ST_INTEGER, tokenizer.NewToken(tokenizer.TK_INT, "200")),
+								nil),
+						}),
+					),
 				),
-				compiler.NewBlockNode(
-					NewNodeChain([]*compiler.Node{
-						compiler.NewLRNode(compiler.ST_RETURN,
-							nil,
-							nil),
-						compiler.NewLRNode(compiler.ST_RETURN,
-							compiler.NewLeafNode(compiler.ST_INTEGER, tokenizer.NewToken(tokenizer.TK_INT, "200")),
-							nil),
-					}),
-				),
-			),
+				compiler.NewEofNode(),
+			}),
 		},
 	}
 
