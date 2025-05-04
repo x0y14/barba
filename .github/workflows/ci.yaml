@@ -10,5 +10,5 @@ jobs:
           check-latest: true
           cache: true
       - run: |
-          go test ./runtime
-          go test ./compiler
+          go test ./runtime/...
+          go test ./compiler/...
