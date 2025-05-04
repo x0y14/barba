@@ -63,9 +63,11 @@ func NewMap(ktyp *Constant, vtyp *Constant) *Constant {
 
 // NewConstantFromStr "string"からString, "[]string"からArray->Stringのように文字列から与えられた型データを
 // 解析してConstantにして返却します．
-//func NewConstantFromStr(rawConstant string) (*Constant, error) {
-//	runes := []rune(rawConstant)
-//	tokens := tokenize(runes)
-//
-//	return nil, nil
-//}
+func NewConstantFromStr(rawConstant string) (*Constant, error) {
+	runes := []rune(rawConstant)
+	tokens, err := Tokenize(runes)
+	if err != nil {
+		return nil, err
+	}
+	return Parse(tokens)
+}
