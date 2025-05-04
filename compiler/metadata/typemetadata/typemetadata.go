@@ -50,9 +50,14 @@ func NewArray(typ *Constant) *Constant {
 }
 
 // NewMap map[string]intはMap->string->Intで表現します．
+// keyの要素を最後まで展開した後，valueを展開します．
 func NewMap(ktyp *Constant, vtyp *Constant) *Constant {
 	c := NewConstant(Map, ktyp)
-	c.Next.Next = vtyp
+	tail := c
+	for tail.Next != nil {
+		tail = tail.Next
+	}
+	tail.Next = vtyp
 	return c
 }
 

@@ -41,11 +41,11 @@ func TestParse(t *testing.T) {
 			"[][]int",
 			NewArray(NewArray(NewInt())),
 		},
-		//{
-		//	"map array v2 err",
-		//	"map[map[string]string][]int",
-		//	NewMap(NewMap(NewString(), NewString()), NewArray(NewInt())),
-		//},
+		{
+			"map array v2 err",
+			"map[map[string]string][]int",
+			NewMap(NewMap(NewString(), NewString()), NewArray(NewInt())),
+		},
 	}
 
 	for _, tt := range tests {

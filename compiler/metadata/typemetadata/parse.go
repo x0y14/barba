@@ -53,14 +53,18 @@ func parseMap() error {
 	if err := expect("["); err != nil {
 		return err
 	}
-
 	setAndGoNext(NewConstant(Map, nil))
 
+	// key
 	if err := parse(); err != nil {
 		return err
 	}
-
 	if err := expect("]"); err != nil {
+		return err
+	}
+
+	// value
+	if err := parse(); err != nil {
 		return err
 	}
 
