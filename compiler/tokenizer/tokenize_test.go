@@ -58,9 +58,10 @@ func TestTokenize(t *testing.T) {
 			NewTokenChain([]*Token{NewToken(TK_SUB, ""), NewToken(TK_FLOAT, "123.45"), NewEofToken()}),
 		},
 		{
+			// 空白は全部読み飛ばされるのでEOFしか残らない
 			"whitespace",
 			" \n\t\r",
-			NewTokenChain([]*Token{NewToken(TK_WHITESPACE, " \n\t\r"), NewEofToken()}),
+			NewTokenChain([]*Token{NewEofToken()}),
 		},
 		{
 			"escape",
